@@ -1,5 +1,7 @@
 # Godot Scene Manager
 
+![Logo](/logo.png)
+
 This plugin will attempt to solve several common issues with Scene management that we've encountered while developing our games.
 
 ![Demonstration of Shader Fades](/scene_manager_demo.gif)
