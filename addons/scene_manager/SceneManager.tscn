@@ -1,0 +1,44 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://addons/scene_manager/ColorFade.tres" type="Animation" id=1]
+[ext_resource path="res://addons/scene_manager/SceneManager.gd" type="Script" id=2]
+[ext_resource path="res://addons/scene_manager/Dissolve2d.shader" type="Shader" id=3]
+[ext_resource path="res://addons/scene_manager/shader_patterns/squares.png" type="Texture" id=4]
+[ext_resource path="res://addons/scene_manager/ShaderFade.tres" type="Animation" id=5]
+[ext_resource path="res://addons/scene_manager/ShaderFadeEase.tres" type="Animation" id=6]
+
+[sub_resource type="ShaderMaterial" id=1]
+shader = ExtResource( 3 )
+shader_param/dissolve_amount = 0.0
+shader_param/fade_color = null
+shader_param/inverted = null
+shader_param/dissolve_texture = ExtResource( 4 )
+
+[node name="SceneManager" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = 3
+
+[node name="Fade" type="ColorRect" parent="CanvasLayer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0, 0, 0, 0 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ShaderFade" type="ColorRect" parent="CanvasLayer"]
+material = SubResource( 1 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/ColorFade = ExtResource( 1 )
+anims/ShaderFade = ExtResource( 5 )
+anims/ShaderFadeEase = ExtResource( 6 )
