@@ -8,6 +8,6 @@ func _on_Button_button_down():
 			"type": SceneManager.FadeTypes.ShaderFade,
 			"shader_pattern": "diagonal",
 			"shader_pattern_leave": "curtains",
-			"invert_on_leave": true
+			"invert_on_leave": false
 		}
 	)

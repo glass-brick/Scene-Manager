@@ -2,6 +2,8 @@
 
 This plugin will attempt to solve several common issues with Scene management that we've encountered while developing our games.
 
+![Demonstration of Shader Fades](/scene_manager_demo.gif)
+
 ## How to install
 
 1. Open AssetLib in your Godot project, look for Scene Manager, download it and add it to your project
