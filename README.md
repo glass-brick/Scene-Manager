@@ -52,3 +52,9 @@ The following patterns are available out-of-the-box:
 ### `FadeTypes`
 
 SceneManager defines this enum: `FadeTypes { Fade, ShaderFade }`. It can be accessed via `SceneManager.FadeTypes.Fade`
+
+### Signals
+
+- `scene_unloaded`: emitted when the first scene is unloaded
+- `scene_loaded`: emitted when the new scene is loaaded
+- `transition_finished`: emitted when the transition finishes
