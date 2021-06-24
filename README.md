@@ -35,15 +35,15 @@ You can pass the following options to this function in a dictionary:
 The following options are only used when using a `ShaderFade`. If any of them are declared without providing a `"type"`, it will be inferred as `ShaderFade`.
 
 - `pattern : (String || Texture) = 'squares'`: Pattern to use for the transition. Using a simple name will load the premade patterns we have designed (you can see them in `addons/scene_manager/shader_patterns`). Otherwise, you may pass an absolute path to your own pattern `"res://my_pattern.png"` or a `Texture` object.
-- `pattern_enter : (String || Texture) = null`: Same as `pattern`, but overrides the pattern only for the fade-to-black transition.
-- `pattern_leave : (String || Texture) = null`: Same as `pattern`, but overrides the pattern only for the fade-from-black transition.
+- `pattern_enter : (String || Texture) = pattern`: Same as `pattern`, but overrides the pattern only for the fade-to-black transition.
+- `pattern_leave : (String || Texture) = pattern`: Same as `pattern`, but overrides the pattern only for the fade-from-black transition.
 
 - `shader_pattern`, `shader_pattern_enter` and `shader_pattern_leave` were the old names for these options, they will still work but have been deprecated.
 
 - `invert_on_leave : Bool = true`: Wether the transition should invert when fading out of black. This usually looks better on, the effect is that the first pixels that turned black are the first ones that fade into the new screen. This generally works for "sweep" transitions like `"horizontal"`, but others such as `"curtains"` might look better with this flag turned off
-- `ease : Bool = false`: Wether the animation should "ease" during the transition
-- `ease_enter : Bool = null`: Wether the animation should "ease" during the fade-to-black transition
-- `ease_leave : Bool = null`: Wether the animation should "ease" during the fade-from-black transition
+- `ease : (float || Bool) = 1.0`: Amount of ease the animation should have during the transition. For backwards compatibility, `true` becomes `0.5` and `false` becomes `1.0`.
+- `ease_enter : (float || Bool) = ease`: Amount of ease the animation should have during the fade-to-black transition.
+- `ease_leave : (float || Bool) = ease`: Amount of ease the animation should have during the fade-from-black transition.
 
 The following patterns are available out-of-the-box:
 
