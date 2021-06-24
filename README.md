@@ -31,6 +31,7 @@ You can pass the following options to this function in a dictionary:
 - `speed : float = 2`: Speed of the moving transition.
 - `color : Color = Color('#000000')`: Color to use for the transition screen. It's black by default.
 - `wait_time : float = 0.5`: Time spent in the transition screen while switching scenes. Leaving it at 0 with fade will result in the screen not turning black, so it waits a little bit by default.
+- `no_scene_change : Bool = false`: If set to true, it will not change or reload the scene once the fade is complete
 
 The following options are only used when using a `ShaderFade`. If any of them are declared without providing a `"type"`, it will be inferred as `ShaderFade`.
 
@@ -62,6 +63,10 @@ This method functions exactly like `change_scene(current_scene_path, options)`, 
 
 Of note, is that this method will not trigger the `scene_unloaded` signal, since nothing is being unloaded. It will however trigger the `scene_loaded` signal. If a legitimate use-case for a `scene_reloaded` signal arises please open an issue and we will change it.
 
+### `func fade_in_place(options: Dictionary = defaultOptions)`
+
+This method functions exactly like `reload_scene({ "no_scene_change": true })`, it will simply trigger the transition used in options, without modifying anything. You can use the `fade_complete` signal if you want to change something while the screen is completely black.
+
 ### `is_transitioning: bool`
 
 This variable changes depending of wether a transition is active or not. You can use this to make sure a transition is finished before starting a new one if the `transition_finished` signal does not suit your use-case.
@@ -74,4 +79,5 @@ SceneManager defines this enum: `FadeTypes { Fade, ShaderFade }`. It can be acce
 
 - `scene_unloaded`: emitted when the first scene is unloaded
 - `scene_loaded`: emitted when the new scene is loaaded
+- `fade_complete`: emitted when the fade-to-black animation finishes
 - `transition_finished`: emitted when the transition finishes

@@ -1,5 +1,6 @@
 extends Node2D
 
+signal fade_complete
 signal scene_unloaded
 signal scene_loaded
 signal transition_finished
@@ -21,7 +22,8 @@ var default_options = {
 	"pattern": "squares",
 	"wait_time": 0.5,
 	"invert_on_leave": true,
-	"ease": 1.0
+	"ease": 1.0,
+	"no_scene_change": false,
 }
 # extra_options = {
 #   "pattern_enter": DEFAULT_IMAGE,
@@ -95,9 +97,19 @@ func _get_final_options(initial_options: Dictionary):
 func change_scene(path, setted_options: Dictionary = {}):
 	var options = _get_final_options(setted_options)
 	yield(_fade_out(options), "completed")
-	_replace_scene(path)
+	if not setted_options["no_scene_change"]:
+		_replace_scene(path)
 	yield(_tree.create_timer(options["wait_time"]), "timeout")
 	yield(_fade_in(options), "completed")
+
+
+func reload_scene(setted_options: Dictionary = {}):
+	yield(change_scene(null, setted_options), "completed")
+
+
+func fade_in_place(setted_options: Dictionary = {}):
+	setted_options["no_scene_change"] = true
+	yield(change_scene(null, setted_options), "completed")
 
 
 func _replace_scene(path):
@@ -113,10 +125,6 @@ func _replace_scene(path):
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
 	emit_signal("scene_loaded")
-
-
-func reload_scene(setted_options: Dictionary = {}):
-	yield(change_scene(null, setted_options), "completed")
 
 
 func _fade_out(options):
@@ -139,6 +147,7 @@ func _fade_out(options):
 			_animation_player.play("ShaderFade")
 
 	yield(_animation_player, "animation_finished")
+	emit_signal("fade_complete")
 
 
 func _fade_in(options):
