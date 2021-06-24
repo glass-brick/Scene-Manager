@@ -19,9 +19,13 @@ When SceneManager is installed, you will gain access to the `SceneManager` singl
 
 ## SceneManager
 
-### `func change_scene(path: String, options: Dictionary = defaultOptions) -> void`
+### `func change_scene(path: String?, options: Dictionary = defaultOptions) -> void`
 
-This method lets you easily change scenes with transitions. They're highly customizable and we will consider adding progressive loading if it's requested enough. You can pass the following options to this function in a dictionary:
+This method lets you easily change scenes with transitions. They're highly customizable and we will consider adding progressive loading if it's requested enough.
+
+The `path` paremeter accepts an absolute file path for your new scene (i.e: 'res://demo/test.tscn'). If `null` is passed as the path, it will reload the current scene, but for ease-of-use we recommend using the `reload_scene(options)` function explained further down.
+
+You can pass the following options to this function in a dictionary:
 
 - `type : FadeTypes = FadeTypes.Fade`: Style of the transition. `Fade` is a simple fade-to-black transition, while `ShaderFade` will use a black-and-white image to represent each pixel, allowing for custom transitions.
 - `speed : float = 2`: Speed of the moving transition.
@@ -48,6 +52,16 @@ The following patterns are available out-of-the-box:
 - `"scribbles"`
 - `"squares"`
 - `"vertical"`
+
+### `func reload_scene(options: Dictionary = defaultOptions) -> void`
+
+This method functions exactly like `change_scene(current_scene_path, options)`, but you do not have to provide the path and it should be slightly faster since it reloads the scene rather than removing it and instantiating again.
+
+Of note, is that this method will not trigger the `scene_unloaded` signal, since nothing is being unloaded. It will however trigger the `scene_loaded` signal. If a legitimate use-case for a `scene_reloaded` signal arises please open an issue and we will change it.
+
+### `is_transitioning: bool`
+
+This variable changes depending of wether a transition is active or not. You can use this to make sure a transition is finished before starting a new one if the `transition_finished` signal does not suit your use-case.
 
 ### `FadeTypes`
 

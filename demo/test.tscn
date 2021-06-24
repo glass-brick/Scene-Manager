@@ -2,7 +2,7 @@
 
 [ext_resource path="res://demo/test.gd" type="Script" id=1]
 
-[node name="Node2D" type="Node2D"]
+[node name="Level1" type="Node"]
 script = ExtResource( 1 )
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
@@ -16,10 +16,10 @@ __meta__ = {
 }
 
 [node name="Button" type="Button" parent="CanvasLayer/ColorRect"]
-margin_left = 396.549
-margin_top = 231.857
-margin_right = 632.549
-margin_bottom = 320.857
+anchor_left = 0.4
+anchor_top = 0.4
+anchor_right = 0.6
+anchor_bottom = 0.6
 text = "Change Scene"
 __meta__ = {
 "_edit_use_anchors_": false

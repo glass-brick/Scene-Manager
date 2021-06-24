@@ -4,21 +4,21 @@ signal scene_unloaded
 signal scene_loaded
 signal transition_finished
 
+var is_transitioning := false
 onready var _tree := get_tree()
 onready var _root := _tree.get_root()
 onready var _current_scene := _tree.current_scene
 onready var _animation_player := $AnimationPlayer
 onready var _fade_rect := $CanvasLayer/Fade
 onready var _shader_blend_rect := $CanvasLayer/ShaderFade
-var screenshot
 
 enum FadeTypes { Fade, ShaderFade }
 
 var default_options = {
 	"type": FadeTypes.Fade,
 	"speed": 2,
-	"color": Color('#000000'),
-	"shader_pattern": 'squares',
+	"color": Color("#000000"),
+	"shader_pattern": "squares",
 	"wait_time": 0.5,
 	"invert_on_leave": true,
 	"ease": false
@@ -54,15 +54,20 @@ func _get_final_options(initial_options: Dictionary):
 	return options
 
 
-func change_scene(path: String, setted_options: Dictionary = {}):
+func change_scene(path, setted_options: Dictionary = {}):
 	var options = _get_final_options(setted_options)
-	yield(_fade_out(options), 'completed')
+	yield(_fade_out(options), "completed")
 	_replace_scene(path)
 	yield(_tree.create_timer(options["wait_time"]), "timeout")
-	yield(_fade_in(options), 'completed')
+	yield(_fade_in(options), "completed")
 
 
 func _replace_scene(path):
+	if path == null:
+		# if no path, assume we want a reload
+		_tree.reload_current_scene()
+		emit_signal("scene_loaded")
+		return
 	_current_scene.free()
 	emit_signal("scene_unloaded")
 	var following_scene = ResourceLoader.load(path)
@@ -72,7 +77,12 @@ func _replace_scene(path):
 	emit_signal("scene_loaded")
 
 
+func reload_scene(setted_options: Dictionary = {}):
+	yield(change_scene(null, setted_options), "completed")
+
+
 func _fade_out(options):
+	is_transitioning = true
 	_animation_player.playback_speed = options["speed"]
 
 	match options["type"]:
@@ -89,7 +99,7 @@ func _fade_out(options):
 			_shader_blend_rect.material.set_shader_param("inverted", false)
 			_animation_player.play("ShaderFadeEase" if ease_transition else "ShaderFade")
 
-	yield(_animation_player, 'animation_finished')
+	yield(_animation_player, "animation_finished")
 
 
 func _fade_in(options):
@@ -105,5 +115,6 @@ func _fade_in(options):
 			_shader_blend_rect.material.set_shader_param("inverted", options["invert_on_leave"])
 			_animation_player.play_backwards("ShaderFadeEase" if ease_transition else "ShaderFade")
 
-	yield(_animation_player, 'animation_finished')
+	yield(_animation_player, "animation_finished")
+	is_transitioning = false
 	emit_signal("transition_finished")
