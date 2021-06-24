@@ -18,17 +18,33 @@ var default_options = {
 	"type": FadeTypes.Fade,
 	"speed": 2,
 	"color": Color("#000000"),
-	"shader_pattern": "squares",
+	"pattern": "squares",
 	"wait_time": 0.5,
 	"invert_on_leave": true,
 	"ease": false
 }
 # extra_options = {
-#   "shader_pattern_enter": DEFAULT_IMAGE,
-#   "shader_pattern_leave": DEFAULT_IMAGE,
+#   "pattern_enter": DEFAULT_IMAGE,
+#   "pattern_leave": DEFAULT_IMAGE,
 #   "ease_enter": true,
 #   "ease_leave": true,
 # }
+
+var new_names = {
+	"shader_pattern": "pattern"
+	"shader_pattern_enter": "pattern_enter"
+	"shader_pattern_leave": "pattern_leave"
+}
+
+var shader_exclusive_keys = [
+	"pattern",
+	"pattern_enter",
+	"pattern_leave",
+	"invert_on_leave"
+	"ease",
+	"ease_enter",
+	"ease_leave",
+]
 
 
 func _load_pattern(pattern):
@@ -37,19 +53,39 @@ func _load_pattern(pattern):
 			return load(pattern)
 		return load("res://addons/scene_manager/shader_patterns/%s.png" % pattern)
 	elif not pattern is Texture:
-		push_error("shader_pattern %s is not a valid Texture or path" % pattern)
+		push_error("pattern %s is not a valid Texture or path" % pattern)
 	return pattern
 
 
 func _get_final_options(initial_options: Dictionary):
 	var options = initial_options.duplicate()
+
+	if not "type" in initial_options:
+		var inferred_type = FadeTypes.Fade
+		for key in shader_exclusive_keys:
+			if initial_options.has(key):
+				inferred_type = FadeTypes.ShaderFade
+		options["type"] = inferred_type
+
+	for key in options:
+		if new_names.has(key):
+			var new_key = new_names[key]
+			options[new_key] = options[key]
+
 	for key in default_options.keys():
 		if not options.has(key):
 			options[key] = default_options[key]
 
-	for pattern_key in ["shader_pattern", "shader_pattern_enter", "shader_pattern_leave"]:
-		if pattern_key in options:
-			options[pattern_key] = _load_pattern(options[pattern_key])
+	for pattern_key in ["pattern_enter", "pattern_leave"]:
+		options[pattern_key] = (
+			_load_pattern(options[pattern_key])
+			if pattern_key in options
+			else _load_pattern(options["pattern"])
+		)
+
+	for ease_key in ["ease_enter", "ease_leave"]:
+		if not ease_key in options:
+			options[ease_key] = options["ease"]
 
 	return options
 
@@ -91,13 +127,12 @@ func _fade_out(options):
 			_animation_player.play("ColorFade")
 
 		FadeTypes.ShaderFade:
-			var pattern = options.get("shader_pattern_enter", options["shader_pattern"])
-			var ease_transition = options.get("ease_enter", options["ease"])
-
-			_shader_blend_rect.material.set_shader_param("dissolve_texture", pattern)
+			_shader_blend_rect.material.set_shader_param(
+				"dissolve_texture", options["pattern_enter"]
+			)
 			_shader_blend_rect.material.set_shader_param("fade_color", options["color"])
 			_shader_blend_rect.material.set_shader_param("inverted", false)
-			_animation_player.play("ShaderFadeEase" if ease_transition else "ShaderFade")
+			_animation_player.play("ShaderFadeEase" if options["ease_enter"] else "ShaderFade")
 
 	yield(_animation_player, "animation_finished")
 
@@ -108,12 +143,13 @@ func _fade_in(options):
 			_animation_player.play_backwards("ColorFade")
 
 		FadeTypes.ShaderFade:
-			var pattern = options.get("shader_pattern_leave", options["shader_pattern"])
-			var ease_transition = options.get("ease_leave", options["ease"])
-
-			_shader_blend_rect.material.set_shader_param("dissolve_texture", pattern)
+			_shader_blend_rect.material.set_shader_param(
+				"dissolve_texture", options["pattern_leave"]
+			)
 			_shader_blend_rect.material.set_shader_param("inverted", options["invert_on_leave"])
-			_animation_player.play_backwards("ShaderFadeEase" if ease_transition else "ShaderFade")
+			_animation_player.play_backwards(
+				"ShaderFadeEase" if options["ease_leave"] else "ShaderFade"
+			)
 
 	yield(_animation_player, "animation_finished")
 	is_transitioning = false
