@@ -1,11 +1,10 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://addons/scene_manager/ColorFade.tres" type="Animation" id=1]
 [ext_resource path="res://addons/scene_manager/SceneManager.gd" type="Script" id=2]
 [ext_resource path="res://addons/scene_manager/Dissolve2d.shader" type="Shader" id=3]
 [ext_resource path="res://addons/scene_manager/shader_patterns/squares.png" type="Texture" id=4]
 [ext_resource path="res://addons/scene_manager/ShaderFade.tres" type="Animation" id=5]
-[ext_resource path="res://addons/scene_manager/ShaderFadeEase.tres" type="Animation" id=6]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 3 )
@@ -41,4 +40,3 @@ __meta__ = {
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/ColorFade = ExtResource( 1 )
 anims/ShaderFade = ExtResource( 5 )
-anims/ShaderFadeEase = ExtResource( 6 )
