@@ -3,6 +3,7 @@ extends EditorProperty
 var line_edit = LineEdit.new()
 var edited_control = null
 var meta_name = SceneManagerPlugin.get_singleton_meta_name()
+var group_name = SceneManagerPlugin.get_singleton_group()
 
 
 func _ready():
@@ -20,7 +21,7 @@ func _physics_process(_delta):
 	if edited_control:
 		draw_red = (
 			not edited_control.has_meta(meta_name)
-			and edited_control.is_in_group(meta_name)
+			and edited_control.is_in_group(group_name)
 		)
 
 
