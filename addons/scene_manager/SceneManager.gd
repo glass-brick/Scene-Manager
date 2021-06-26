@@ -159,6 +159,7 @@ func _replace_scene(path):
 	if path == null:
 		# if no path, assume we want a reload
 		_tree.reload_current_scene()
+		_set_singleton_entities()
 		emit_signal("scene_loaded")
 		return
 	_current_scene.free()
