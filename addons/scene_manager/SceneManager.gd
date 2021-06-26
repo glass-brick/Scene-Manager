@@ -48,6 +48,36 @@ var shader_exclusive_keys = [
 	"ease_leave",
 ]
 
+var singleton_entities = {}
+
+
+func _ready():
+	connect("scene_loaded", self, "_set_singleton_entities")
+	_set_singleton_entities()
+
+
+func _set_singleton_entities():
+	singleton_entities = {}
+	var entities = _tree.get_nodes_in_group(SceneManagerPlugin.get_singleton_group())
+	for entity in entities:
+		if entity.has_meta(SceneManagerPlugin.get_singleton_meta_name()):
+			singleton_entities[entity.get_meta(SceneManagerPlugin.get_singleton_meta_name())] = entity
+		else:
+			push_error(
+				"The node %s was set as a singleton entity, but no name was provided." % entity.name
+			)
+
+
+func get_entity(entity_name: String):
+	if not singleton_entities.has(entity_name):
+		push_error(
+			(
+				"Entity %s is not set as a singleton entity. Please define it in the editor."
+				% entity_name
+			)
+		)
+	return singleton_entities[entity_name]
+
 
 func _load_pattern(pattern):
 	if pattern is String:
@@ -55,7 +85,7 @@ func _load_pattern(pattern):
 			return load(pattern)
 		return load("res://addons/scene_manager/shader_patterns/%s.png" % pattern)
 	elif not pattern is Texture:
-		push_error("pattern %s is not a valid Texture or path" % pattern)
+		push_error("Pattern %s is not a valid Texture or path." % pattern)
 	return pattern
 
 

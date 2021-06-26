@@ -1,6 +1,7 @@
 extends EditorInspectorPlugin
 
-var control = preload('NodeFlagsInspector.tscn')
+var SingletonCheckProperty = load('res://addons/scene_manager/SingletonCheckProperty.gd')
+var SingletonNameProperty = load('res://addons/scene_manager/SingletonNameProperty.gd')
 
 
 func can_handle(object: Object):
@@ -8,4 +9,5 @@ func can_handle(object: Object):
 
 
 func parse_begin(object: Object):
-	add_custom_control(control.instance())
+	add_property_editor("singleton_check", SingletonCheckProperty.new())
+	add_property_editor("singleton_name", SingletonNameProperty.new())
