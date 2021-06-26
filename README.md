@@ -15,7 +15,11 @@ Alternatively, you may download this repo from github and add the `assets` folde
 
 ## API
 
-When SceneManager is installed, you will gain access to the `SceneManager` singleton.
+When SceneManager is installed, you will gain access to the `SceneManager` singleton. You can then trigger it's methods directly like so:
+
+```gd
+SceneManager.change_scene('res://demo/test.tscn')
+```
 
 ## SceneManager
 
