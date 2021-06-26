@@ -2,6 +2,7 @@ extends Node
 
 
 func _ready():
+	yield(SceneManager, "scene_loaded")
 	SceneManager.get_entity("Button").connect("button_down", self, "_on_Button_button_down")
 
 

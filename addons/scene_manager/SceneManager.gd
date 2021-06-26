@@ -52,13 +52,15 @@ var singleton_entities = {}
 
 
 func _ready():
-	connect("scene_loaded", self, "_set_singleton_entities")
 	_set_singleton_entities()
+	call_deferred("emit_signal", "scene_loaded")
 
 
 func _set_singleton_entities():
 	singleton_entities = {}
-	var entities = _tree.get_nodes_in_group(SceneManagerPlugin.get_singleton_group())
+	var entities = _current_scene.get_tree().get_nodes_in_group(
+		SceneManagerPlugin.get_singleton_group()
+	)
 	for entity in entities:
 		if entity.has_meta(SceneManagerPlugin.get_singleton_meta_name()):
 			singleton_entities[entity.get_meta(SceneManagerPlugin.get_singleton_meta_name())] = entity
@@ -154,6 +156,7 @@ func _replace_scene(path):
 	_current_scene = following_scene.instance()
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
+	_set_singleton_entities()
 	emit_signal("scene_loaded")
 
 
