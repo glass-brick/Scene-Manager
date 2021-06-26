@@ -14,14 +14,6 @@ config/name="Scene Manager"
 run/main_scene="res://demo/test.tscn"
 config/icon="res://logo.png"
 
-[autoload]
-
-SceneManager="*res://addons/scene_manager/SceneManager.tscn"
-
-[editor_plugins]
-
-enabled=PoolStringArray( "res://addons/scene_manager/plugin.cfg" )
-
 [physics]
 
 common/enable_pause_aware_picking=true
