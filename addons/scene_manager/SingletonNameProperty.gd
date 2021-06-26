@@ -19,11 +19,14 @@ func _physics_process(_delta):
 			line_edit.text = edited_control.get_meta(meta_name)
 	if edited_control:
 		draw_red = (
-			edited_control.has_meta(meta_name)
-			and edited_control.get_meta(meta_name) == ""
+			not edited_control.has_meta(meta_name)
 			and edited_control.is_in_group(meta_name)
 		)
 
 
 func _on_text_changed(new_text: String):
-	edited_control.set_meta(meta_name, new_text)
+	if new_text == "":
+		edited_control.set_meta(meta_name, null)
+	else:
+		edited_control.set_meta(meta_name, new_text)
+	emit_changed("meta", new_text, meta_name)

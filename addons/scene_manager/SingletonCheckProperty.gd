@@ -8,7 +8,7 @@ var group_name = SceneManagerPlugin.get_singleton_group()
 func _ready():
 	edited_control = get_edited_object()
 
-	label = "Singleton entity?"
+	label = "Singleton entity"
 
 	checkbox.connect("toggled", self, "_on_checkbox_checked")
 	add_child(checkbox)

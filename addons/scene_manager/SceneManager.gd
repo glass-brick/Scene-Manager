@@ -63,10 +63,21 @@ func _set_singleton_entities():
 	)
 	for entity in entities:
 		if entity.has_meta(SceneManagerPlugin.get_singleton_meta_name()):
-			singleton_entities[entity.get_meta(SceneManagerPlugin.get_singleton_meta_name())] = entity
+			var entity_name = entity.get_meta(SceneManagerPlugin.get_singleton_meta_name())
+			if singleton_entities.has(entity_name):
+				push_error(
+					(
+						"The entity name %s is already being used more than once! Please check that your entity name is unique within the scene."
+						% entity_name
+					)
+				)
+			singleton_entities[entity_name] = entity
 		else:
 			push_error(
-				"The node %s was set as a singleton entity, but no name was provided." % entity.name
+				(
+					"The node %s was set as a singleton entity, but no entity name was provided."
+					% entity.name
+				)
 			)
 
 

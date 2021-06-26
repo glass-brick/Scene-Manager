@@ -2,7 +2,7 @@
 
 ![Logo](/logo.png)
 
-This plugin will attempt to solve several common issues with Scene management that we've encountered while developing our games.
+Plugin for managing transitions and Node references between scenes. Expect more features to be added in the future!
 
 ![Demonstration of Shader Fades](/scene_manager_demo.gif)
 
@@ -11,15 +11,45 @@ This plugin will attempt to solve several common issues with Scene management th
 1. Open AssetLib in your Godot project, look for Scene Manager, download it and add it to your project
 2. Enable the SceneManager plugin from Project Settings -> Plugins
 
-Alternatively, you may download this repo from github and add the `assets` folder to your project, then enable it from your Project Settings
+Alternatively, you may download this repo from github and add the `assets` folder to your project, then enable it from your Project Settings~
 
-## API
+## How to use
 
 When SceneManager is installed, you will gain access to the `SceneManager` singleton. You can then trigger it's methods directly like so:
 
 ```gd
 SceneManager.change_scene('res://demo/test.tscn')
 ```
+
+![Demonstration of Simple Fade](/simple_fade_demo.gif)
+
+There are similar methods for reloading your scene and making a fade without transition, read the [API](#api) docs!
+
+---
+
+We have also added the Entity Singleton feature in v0.3! It's an easy way to keep track of important Nodes that only exist once in your scenes (like your player or your level tilemap), regardless of the name they have.
+
+First off, you just have to set the flag and name in the editor:
+
+![Demonstration of Entity Singletons](/scene_manager_singleton_entity_demo.gif)
+
+Then just use it in your code like so:
+
+```gd
+SceneManager.get_entity("ColorRect").color = Color("#FFFFFF")
+```
+
+Of note, is that if you try and use this feature in a `_ready()` function you will get an error. To circumvent this, wait for the scene to be loaded like so:
+
+```gd
+func _ready():
+  yield(SceneManager, "scene_loaded")
+  SceneManager.get_entity("ColorRect").color = Color("#FFFFFF")
+```
+
+Be sure to read the docs down below for a more detailed explanation.
+
+# API
 
 ## SceneManager
 
@@ -70,6 +100,17 @@ Of note, is that this method will not trigger the `scene_unloaded` signal, since
 ### `func fade_in_place(options: Dictionary = defaultOptions)`
 
 This method functions exactly like `reload_scene({ "no_scene_change": true })`, it will simply trigger the transition used in options, without modifying anything. You can use the `fade_complete` signal if you want to change something while the screen is completely black.
+
+### `func get_entity(entity_name: String)`
+
+Get a reference to a named entity (node) in your scene. To define entity names go to the desired node in the editor inspector and you'll see two new properties: `Singleton entity` and `Entity name`. Check the `Singleton entity` checkbox to have this node saved to the SceneManager entity dictionary and write a friendly `Entity name` to be used in this function. Afterwards, you'll be able to access it within the scene.
+
+NOTE: If accessing the node in a `_ready()` method within your scene, `get_entity` will throw an error. This is because saving the entities to the SceneManager requires the scene to be completely loaded, which hasn't happened yet in the `_ready()` method. To circumvent this problem, you will have to wait until the scene is completely loaded. To do this, you can take advantage of the `scene_loaded` signal provided by `SceneManager`, like so:
+
+```gd
+yield(SceneManager, "scene_loaded")
+Player = SceneManager.get_entity("Player")
+```
 
 ### `is_transitioning: bool`
 
