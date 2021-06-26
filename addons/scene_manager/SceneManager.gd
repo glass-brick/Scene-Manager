@@ -48,6 +48,49 @@ var shader_exclusive_keys = [
 	"ease_leave",
 ]
 
+var singleton_entities = {}
+
+
+func _ready():
+	_set_singleton_entities()
+	call_deferred("emit_signal", "scene_loaded")
+
+
+func _set_singleton_entities():
+	singleton_entities = {}
+	var entities = _current_scene.get_tree().get_nodes_in_group(
+		SceneManagerPlugin.get_singleton_group()
+	)
+	for entity in entities:
+		if entity.has_meta(SceneManagerPlugin.get_singleton_meta_name()):
+			var entity_name = entity.get_meta(SceneManagerPlugin.get_singleton_meta_name())
+			if singleton_entities.has(entity_name):
+				push_error(
+					(
+						"The entity name %s is already being used more than once! Please check that your entity name is unique within the scene."
+						% entity_name
+					)
+				)
+			singleton_entities[entity_name] = entity
+		else:
+			push_error(
+				(
+					"The node %s was set as a singleton entity, but no entity name was provided."
+					% entity.name
+				)
+			)
+
+
+func get_entity(entity_name: String):
+	if not singleton_entities.has(entity_name):
+		push_error(
+			(
+				"Entity %s is not set as a singleton entity. Please define it in the editor."
+				% entity_name
+			)
+		)
+	return singleton_entities[entity_name]
+
 
 func _load_pattern(pattern):
 	if pattern is String:
@@ -55,7 +98,7 @@ func _load_pattern(pattern):
 			return load(pattern)
 		return load("res://addons/scene_manager/shader_patterns/%s.png" % pattern)
 	elif not pattern is Texture:
-		push_error("pattern %s is not a valid Texture or path" % pattern)
+		push_error("Pattern %s is not a valid Texture or path." % pattern)
 	return pattern
 
 
@@ -124,6 +167,7 @@ func _replace_scene(path):
 	_current_scene = following_scene.instance()
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
+	_set_singleton_entities()
 	emit_signal("scene_loaded")
 
 

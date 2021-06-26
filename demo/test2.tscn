@@ -15,14 +15,15 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Button" type="Button" parent="CanvasLayer/ColorRect"]
+[node name="Button" type="Button" parent="CanvasLayer/ColorRect" groups=[
+"scene_manager_entity_nodes",
+]]
 anchor_left = 0.4
 anchor_top = 0.4
 anchor_right = 0.6
 anchor_bottom = 0.6
 text = "Change Scene"
 __meta__ = {
-"_edit_use_anchors_": false
+"_edit_use_anchors_": false,
+"entity_name": "Button"
 }
-
-[connection signal="button_down" from="CanvasLayer/ColorRect/Button" to="." method="_on_Button_button_down"]
