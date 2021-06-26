@@ -1,11 +1,11 @@
 extends EditorInspectorPlugin
 
-
-func can_handle(object):
-	print('can handle?', object)
-	return true
+var control = preload('NodeFlagsInspector.tscn')
 
 
-func parse_property(object, type, path, hint, hint_text, usage):
-	print('parse_property', object, type, path, hint, hint_text, usage)
-	return false
+func can_handle(object: Object):
+	return object is Node
+
+
+func parse_begin(object: Object):
+	add_custom_control(control.instance())

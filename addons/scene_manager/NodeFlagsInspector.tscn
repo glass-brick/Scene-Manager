@@ -1,0 +1,52 @@
+[gd_scene format=2]
+
+[node name="ToolButton" type="ToolButton"]
+anchor_right = 1.0
+anchor_bottom = 0.035
+text = "Scene Manager"
+__meta__ = {
+"_edit_use_anchors_": false,
+"_editor_description_": "	"
+}
+
+[node name="VContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = 22.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SingletonCheck" type="HBoxContainer" parent="VContainer"]
+margin_right = 1024.0
+margin_bottom = 24.0
+
+[node name="CheckBox" type="CheckBox" parent="VContainer/SingletonCheck"]
+margin_right = 24.0
+margin_bottom = 24.0
+
+[node name="Label" type="Label" parent="VContainer/SingletonCheck"]
+margin_left = 28.0
+margin_top = 5.0
+margin_right = 144.0
+margin_bottom = 19.0
+text = "Is singleton entity"
+
+[node name="SingletonName" type="HSplitContainer" parent="VContainer"]
+margin_top = 28.0
+margin_right = 1024.0
+margin_bottom = 52.0
+
+[node name="Label" type="Label" parent="VContainer/SingletonName"]
+margin_top = 5.0
+margin_right = 99.0
+margin_bottom = 19.0
+text = "Singleton name"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="LineEdit" type="LineEdit" parent="VContainer/SingletonName"]
+margin_left = 111.0
+margin_right = 1024.0
+margin_bottom = 24.0
