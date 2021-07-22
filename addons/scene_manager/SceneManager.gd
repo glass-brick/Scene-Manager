@@ -59,46 +59,46 @@ func _ready():
 func _set_singleton_entities():
 	singleton_entities = {}
 	var entities = _current_scene.get_tree().get_nodes_in_group(
-		SceneManagerPlugin.get_singleton_group()
+		SceneManagerConstants.SINGLETON_GROUP_NAME
 	)
 	for entity in entities:
-		if entity.has_meta(SceneManagerPlugin.get_singleton_meta_name()):
-			var entity_name = entity.get_meta(SceneManagerPlugin.get_singleton_meta_name())
-			if singleton_entities.has(entity_name):
-				push_error(
-					(
-						"The entity name %s is already being used more than once! Please check that your entity name is unique within the scene."
-						% entity_name
-					)
-				)
-			singleton_entities[entity_name] = entity
-		else:
-			push_error(
-				(
-					"The node %s was set as a singleton entity, but no entity name was provided."
-					% entity.name
-				)
-			)
-
-
-func get_entity(entity_name: String):
-	if not singleton_entities.has(entity_name):
-		push_error(
+		var has_entity_name = entity.has_meta(SceneManagerConstants.SINGLETON_META_NAME)
+		assert(
+			has_entity_name,
 			(
-				"Entity %s is not set as a singleton entity. Please define it in the editor."
+				"The node %s was set as a singleton entity, but no entity name was provided."
+				% entity.name
+			)
+		)
+		var entity_name = entity.get_meta(SceneManagerConstants.SINGLETON_META_NAME)
+		assert(
+			not singleton_entities.has(entity_name),
+			(
+				"The entity name %s is already being used more than once! Please check that your entity name is unique within the scene."
 				% entity_name
 			)
 		)
+		singleton_entities[entity_name] = entity
+
+
+func get_entity(entity_name: String):
+	assert(
+		singleton_entities.has(entity_name),
+		"Entity %s is not set as a singleton entity. Please define it in the editor." % entity_name
+	)
 	return singleton_entities[entity_name]
 
 
 func _load_pattern(pattern):
+	assert(
+		pattern is Texture or pattern is String,
+		"Pattern %s is not a valid Texture, absolute path, or built-in texture." % pattern
+	)
+
 	if pattern is String:
 		if pattern.is_abs_path():
 			return load(pattern)
 		return load("res://addons/scene_manager/shader_patterns/%s.png" % pattern)
-	elif not pattern is Texture:
-		push_error("Pattern %s is not a valid Texture or path." % pattern)
 	return pattern
 
 
