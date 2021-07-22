@@ -2,7 +2,7 @@ extends EditorProperty
 
 var checkbox = CheckBox.new()
 var edited_control = null
-var group_name = SceneManagerPlugin.get_singleton_group()
+var group_name = SceneManagerConstants.SINGLETON_GROUP_NAME
 
 
 func _ready():

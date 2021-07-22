@@ -59,10 +59,10 @@ func _ready():
 func _set_singleton_entities():
 	singleton_entities = {}
 	var entities = _current_scene.get_tree().get_nodes_in_group(
-		SceneManagerPlugin.get_singleton_group()
+		SceneManagerConstants.SINGLETON_GROUP_NAME
 	)
 	for entity in entities:
-		var has_entity_name = entity.has_meta(SceneManagerPlugin.get_singleton_meta_name())
+		var has_entity_name = entity.has_meta(SceneManagerConstants.SINGLETON_META_NAME)
 		assert(
 			has_entity_name,
 			(
@@ -70,7 +70,7 @@ func _set_singleton_entities():
 				% entity.name
 			)
 		)
-		var entity_name = entity.get_meta(SceneManagerPlugin.get_singleton_meta_name())
+		var entity_name = entity.get_meta(SceneManagerConstants.SINGLETON_META_NAME)
 		assert(
 			not singleton_entities.has(entity_name),
 			(

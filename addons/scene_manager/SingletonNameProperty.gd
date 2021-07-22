@@ -2,8 +2,8 @@ extends EditorProperty
 
 var line_edit = LineEdit.new()
 var edited_control = null
-var meta_name = SceneManagerPlugin.get_singleton_meta_name()
-var group_name = SceneManagerPlugin.get_singleton_group()
+var meta_name = SceneManagerConstants.SINGLETON_META_NAME
+var group_name = SceneManagerConstants.SINGLETON_GROUP_NAME
 
 
 func _ready():

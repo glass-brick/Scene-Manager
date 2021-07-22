@@ -1,12 +1,5 @@
 tool
 extends EditorPlugin
-class_name SceneManagerPlugin
-
-static func get_singleton_group():
-	return "scene_manager_entity_nodes"
-static func get_singleton_meta_name():
-	return "entity_name"
-
 var _inspector_plugin
 
 
