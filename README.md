@@ -11,7 +11,7 @@ Plugin for managing transitions and Node references between scenes. Expect more 
 1. Open AssetLib in your Godot project, look for Scene Manager, download it and add it to your project
 2. Enable the SceneManager plugin from Project Settings -> Plugins
 
-Alternatively, you may download this repo from github and add the `assets` folder to your project, then enable it from your Project Settings~
+Alternatively, you may download this repo from github and add the `addons` folder to your project, then enable it from your Project Settings~
 
 ## How to use
 
