@@ -159,6 +159,8 @@ func _replace_scene(path):
 	if path == null:
 		# if no path, assume we want a reload
 		_tree.reload_current_scene()
+		yield(_tree.create_timer(0.0), "timeout")
+		_current_scene = _tree.current_scene
 		_set_singleton_entities()
 		emit_signal("scene_loaded")
 		return
@@ -166,6 +168,7 @@ func _replace_scene(path):
 	emit_signal("scene_unloaded")
 	var following_scene = ResourceLoader.load(path)
 	_current_scene = following_scene.instance()
+	yield(_tree.create_timer(0.0), "timeout")
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
 	_set_singleton_entities()
