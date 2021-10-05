@@ -13,15 +13,9 @@ _global_script_classes=[ {
 "class": "SceneManagerConstants",
 "language": "GDScript",
 "path": "res://addons/scene_manager/SceneManagerConstants.gd"
-}, {
-"base": "EditorPlugin",
-"class": "SceneManagerPlugin",
-"language": "GDScript",
-"path": "res://addons/scene_manager/SceneManagerPlugin.gd"
 } ]
 _global_script_class_icons={
-"SceneManagerConstants": "",
-"SceneManagerPlugin": ""
+"SceneManagerConstants": ""
 }
 
 [application]
