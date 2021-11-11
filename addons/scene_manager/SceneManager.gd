@@ -136,6 +136,16 @@ func _get_final_options(initial_options: Dictionary):
 
 	return options
 
+var _previous_scene = null
+func _process(_delta):
+	if not is_instance_valid(_previous_scene) and _tree.current_scene:
+		_previous_scene = _tree.current_scene
+		_current_scene = _tree.current_scene
+		_set_singleton_entities()
+		emit_signal("scene_loaded")
+	if _tree.current_scene != _previous_scene:
+		_previous_scene = _tree.current_scene
+		
 
 func change_scene(path, setted_options: Dictionary = {}):
 	var options = _get_final_options(setted_options)
@@ -161,8 +171,6 @@ func _replace_scene(path):
 		_tree.reload_current_scene()
 		yield(_tree.create_timer(0.0), "timeout")
 		_current_scene = _tree.current_scene
-		_set_singleton_entities()
-		emit_signal("scene_loaded")
 		return
 	_current_scene.free()
 	emit_signal("scene_unloaded")
@@ -171,8 +179,6 @@ func _replace_scene(path):
 	yield(_tree.create_timer(0.0), "timeout")
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
-	_set_singleton_entities()
-	emit_signal("scene_loaded")
 
 
 func _fade_out(options):
