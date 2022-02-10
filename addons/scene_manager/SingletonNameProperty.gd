@@ -5,11 +5,10 @@ var edited_control = null
 var meta_name = SceneManagerConstants.SINGLETON_META_NAME
 var group_name = SceneManagerConstants.SINGLETON_GROUP_NAME
 
-
 func _ready():
 	label = "Entity name"
 
-	line_edit.connect("text_changed", self, "_on_text_changed")
+	line_edit.connect("text_changed", Callable(self, "_on_text_changed"))
 	add_child(line_edit)
 
 
@@ -19,10 +18,12 @@ func _physics_process(_delta):
 		if edited_control.has_meta(meta_name):
 			line_edit.text = edited_control.get_meta(meta_name)
 	if edited_control:
-		draw_red = (
-			not edited_control.has_meta(meta_name)
-			and edited_control.is_in_group(group_name)
-		)
+		pass
+#		XXX
+#		draw_red = (
+#			not edited_control.has_meta(meta_name)
+#			and edited_control.is_in_group(group_name)
+#		)
 
 
 func _on_text_changed(new_text: String):

@@ -6,14 +6,14 @@
 ;   [section] ; section goes between []
 ;   param=value ; assign values to parameters
 
-config_version=4
+config_version=5
 
-_global_script_classes=[ {
+_global_script_classes=[{
 "base": "Object",
-"class": "SceneManagerConstants",
-"language": "GDScript",
+"class": &"SceneManagerConstants",
+"language": &"GDScript",
 "path": "res://addons/scene_manager/SceneManagerConstants.gd"
-} ]
+}]
 _global_script_class_icons={
 "SceneManagerConstants": ""
 }
@@ -23,6 +23,7 @@ _global_script_class_icons={
 config/name="Scene Manager"
 run/main_scene="res://demo/test.tscn"
 config/icon="res://logo.png"
+config/features=PackedStringArray("4.0")
 
 [autoload]
 
@@ -30,7 +31,7 @@ SceneManager="*res://addons/scene_manager/SceneManager.tscn"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "res://addons/scene_manager/plugin.cfg" )
+enabled=PackedStringArray("res://addons/scene_manager/plugin.cfg")
 
 [physics]
 

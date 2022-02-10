@@ -4,13 +4,12 @@ var checkbox = CheckBox.new()
 var edited_control = null
 var group_name = SceneManagerConstants.SINGLETON_GROUP_NAME
 
-
 func _ready():
 	edited_control = get_edited_object()
 
 	label = "Singleton entity"
 
-	checkbox.connect("toggled", self, "_on_checkbox_checked")
+	checkbox.connect("toggled", Callable(self, "_on_checkbox_checked"))
 	add_child(checkbox)
 
 

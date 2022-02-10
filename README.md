@@ -1,4 +1,6 @@
-# Godot Scene Manager
+# Godot Scene Manager (Godot 4.0 alpha version)
+
+**WARNING** This is lightly tested port of glass-brick's version. Godot 4.0 is still in alpha, but this version smooths over some of the changes.  This documentation has been lightly updated as well.
 
 ![Logo](/logo.png)
 
@@ -43,7 +45,7 @@ Of note, is that if you try and use this feature in a `_ready()` function you wi
 
 ```gd
 func _ready():
-  yield(SceneManager, "scene_loaded")
+  await SceneManager.scene_loaded
   SceneManager.get_entity("ColorRect").color = Color("#FFFFFF")
 ```
 
@@ -108,7 +110,7 @@ Get a reference to a named entity (node) in your scene. To define entity names g
 NOTE: If accessing the node in a `_ready()` method within your scene, `get_entity` will throw an error. This is because saving the entities to the SceneManager requires the scene to be completely loaded, which hasn't happened yet in the `_ready()` method. To circumvent this problem, you will have to wait until the scene is completely loaded. To do this, you can take advantage of the `scene_loaded` signal provided by `SceneManager`, like so:
 
 ```gd
-yield(SceneManager, "scene_loaded")
+await SceneManager.scene_loaded
 Player = SceneManager.get_entity("Player")
 ```
 
