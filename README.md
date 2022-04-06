@@ -65,7 +65,6 @@ However, there are some breaking changes in the API that might cause confusion:
 - If you used any `ease` parameters as a boolean, replace `true` for `0.5` and `false` for `1.0`
 - The `type` parameter no longer has any effect. Please use `"pattern": "fade"` if you want the simple fade transition.
 - As an extension of that, we have removed the `FadeTypes` enum. Please remove all references to it.
-- The Singleton Entity feature is currently broken. We will try to reimplement it but in the mean time it **WILL** be disabled.
 
 # API
 
