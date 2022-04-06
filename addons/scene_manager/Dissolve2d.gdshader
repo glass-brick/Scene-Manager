@@ -2,12 +2,12 @@ shader_type canvas_item;
 
 //uniform sampler2D dissolve_texture;
 uniform float dissolve_amount : hint_range(0.0, 1.0) = 0.5;
-//uniform vec4 fade_color : hint_color = vec4(1.0, 1.0, 1.0, 1.0);
-//uniform bool inverted = false;
+uniform vec4 fade_color : hint_color = vec4(1.0, 1.0, 1.0, 1.0);
+uniform bool inverted = false;
 
 void fragment() {
-	COLOR = vec4(vec3(1.0), dissolve_amount);
-/*
+	COLOR = vec4(fade_color.rgb, dissolve_amount);
+	/*
 	if (dissolve_amount < 0.0001 || dissolve_amount > 0.9999) {
 		COLOR = vec4(fade_color.rgb, dissolve_amount);
 	} else {
@@ -17,5 +17,5 @@ void fragment() {
 		}
 		COLOR = vec4(fade_color.rgb, step(sample, dissolve_amount));
 	}
-*/
+	*/
 }

@@ -16,7 +16,6 @@ var is_transitioning : bool = false
 enum FadeTypes { Fade, ShaderFade }
 
 var default_options = {
-	"type": FadeTypes.Fade,
 	"speed": 2,
 	"color": Color("#000000"),
 	"pattern": "squares",
@@ -135,24 +134,24 @@ func _process(_delta):
 func change_scene(path, setted_options: Dictionary = {}):
 	var options = _get_final_options(setted_options)
 	_fade_out(options)
-	await self.fade_complete
+	await fade_complete
 	if not options["no_scene_change"]:
 		_replace_scene(path)
 	await _tree.create_timer(options["wait_time"]).timeout
 	_fade_in(options)
 
-	await self.transition_finished
+	await transition_finished
 
 
 
 func reload_scene(setted_options: Dictionary = {}):
 	change_scene(null, setted_options)
-	await self.fade_complete
+	await fade_complete
 
 func fade_in_place(setted_options: Dictionary = {}):
 	setted_options["no_scene_change"] = true
 	change_scene(null, setted_options)
-	await self.fade_complete
+	await fade_complete
 
 func _replace_scene(path):
 	if path == null:
@@ -163,7 +162,7 @@ func _replace_scene(path):
 		return
 	_current_scene.free()
 	emit_signal("scene_unloaded")
-	var following_scene = ResourceLoader.load(path)
+	var following_scene: PackedScene = ResourceLoader.load(path, "PackedScene", 0)
 	_current_scene = following_scene.instantiate()
 	await _tree.create_timer(0.0).timeout
 	_root.add_child(_current_scene)
@@ -174,38 +173,27 @@ func _fade_out(options):
 	is_transitioning = true
 	_animation_player.playback_speed = options["speed"]
 
-	match options["type"]:
-		FadeTypes.Fade:
-			_fade_rect.color = options["color"]
-			_animation_player.play("ColorFade")
-
-		FadeTypes.ShaderFade:
-			_shader_blend_rect.material.set_shader_param(
-				"dissolve_texture", options["pattern_enter"]
-			)
-			_shader_blend_rect.material.set_shader_param("fade_color", options["color"])
-			_shader_blend_rect.material.set_shader_param("inverted", false)
-			var animation = _animation_player.get_animation("ShaderFade")
-			animation.track_set_key_transition(0, 0, options["ease_enter"])
-			_animation_player.play("ShaderFade")
+	_shader_blend_rect.material.set_shader_param(
+		"dissolve_texture", options["pattern_enter"]
+	)
+	_shader_blend_rect.material.set_shader_param("fade_color", options["color"])
+	_shader_blend_rect.material.set_shader_param("inverted", false)
+	var animation = _animation_player.get_animation("ShaderFade")
+	animation.track_set_key_transition(0, 0, options["ease_enter"])
+	_animation_player.play("ShaderFade")
 
 	await _animation_player.animation_finished
 	emit_signal("fade_complete")
 
 
 func _fade_in(options):
-	match options["type"]:
-		FadeTypes.Fade:
-			_animation_player.play_backwards("ColorFade")
-
-		FadeTypes.ShaderFade:
-			_shader_blend_rect.material.set_shader_param(
-				"dissolve_texture", options["pattern_leave"]
-			)
-			_shader_blend_rect.material.set_shader_param("inverted", options["invert_on_leave"])
-			var animation = _animation_player.get_animation("ShaderFade")
-			animation.track_set_key_transition(0, 0, options["ease_leave"])
-			_animation_player.play_backwards("ShaderFade")
+	_shader_blend_rect.material.set_shader_param(
+		"dissolve_texture", options["pattern_leave"]
+	)
+	_shader_blend_rect.material.set_shader_param("inverted", options["invert_on_leave"])
+	var animation = _animation_player.get_animation("ShaderFade")
+	animation.track_set_key_transition(0, 0, options["ease_leave"])
+	_animation_player.play_backwards("ShaderFade")
 
 	await _animation_player.animation_finished
 	is_transitioning = false
