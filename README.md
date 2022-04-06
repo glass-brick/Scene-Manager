@@ -35,6 +35,18 @@ SceneManager.change_scene('res://demo/test.tscn')
 
 There are similar methods for reloading your scene and making a fade without transition, read the [API](#api) docs!
 
+# Update to Godot 4.x guide
+
+With Godot 4.x being so backwards-incompatible, it's unlikely people will have to actually update this library integration rather than starting a new project from scratch.
+
+However, there are some breaking changes in the API that might cause confusion:
+
+- If you used any of these parameters before, remove the `shader` part of their name: `shader_pattern`, `shader_pattern_enter` and `shader_pattern_leave`
+- If you used any `ease` parameters as a boolean, replace `true` for `0.5` and `false` for `1.0`
+- The `type` parameter no longer has any effect. Please use `"pattern": "fade"` if you want the simple fade transition.
+- As an extension of that, we have removed the `FadeTypes` enum. Please remove all references to it.
+- The Singleton Entity feature is currently broken. We will try to reimplement it but in the mean time it **WILL** be disabled.
+
 # API
 
 ## SceneManager
