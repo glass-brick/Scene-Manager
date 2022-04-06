@@ -1,6 +1,6 @@
 extends EditorProperty
 
-var checkbox = CheckBox.new()
+var checkbox := CheckBox.new()
 var edited_control = null
 var group_name = SceneManagerConstants.SINGLETON_GROUP_NAME
 
@@ -16,7 +16,7 @@ func _ready():
 func _physics_process(_delta):
 	if not edited_control and get_edited_object():
 		edited_control = get_edited_object()
-		checkbox.pressed = edited_control.is_in_group(group_name)
+		checkbox.set_pressed_no_signal(edited_control.is_in_group(group_name))
 	checkbox.text = "Yes" if checkbox.pressed else "No"
 
 

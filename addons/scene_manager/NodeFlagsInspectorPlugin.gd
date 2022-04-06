@@ -4,10 +4,10 @@ var SingletonCheckProperty = load('res://addons/scene_manager/SingletonCheckProp
 var SingletonNameProperty = load('res://addons/scene_manager/SingletonNameProperty.gd')
 
 
-func can_handle(object: Object):
+func _can_handle(object: Variant):
 	return object is Node
 
 
-func parse_begin(object: Object):
+func _parse_begin(object: Object):
 	add_property_editor("singleton_check", SingletonCheckProperty.new())
 	add_property_editor("singleton_name", SingletonNameProperty.new())

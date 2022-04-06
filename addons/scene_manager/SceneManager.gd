@@ -32,7 +32,7 @@ var singleton_entities = {}
 
 
 func _ready():
-	# _set_singleton_entities()
+	_set_singleton_entities()
 	call_deferred("emit_signal", "scene_loaded")
 	call_deferred("emit_signal", "transition_finished")
 
@@ -94,7 +94,7 @@ func _process(_delta):
 	if not is_instance_valid(_previous_scene) and _tree.current_scene:
 		_previous_scene = _tree.current_scene
 		_current_scene = _tree.current_scene
-		# _set_singleton_entities()
+		_set_singleton_entities()
 		emit_signal("scene_loaded")
 	if _tree.current_scene != _previous_scene:
 		_previous_scene = _tree.current_scene
