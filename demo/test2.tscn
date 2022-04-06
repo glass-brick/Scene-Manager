@@ -19,5 +19,3 @@ anchor_right = 0.6
 anchor_bottom = 0.6
 text = "Change Scene"
 metadata/entity_name = "Button"
-
-[connection signal="button_down" from="CanvasLayer/ColorRect/Button" to="." method="_on_button_button_down"]
