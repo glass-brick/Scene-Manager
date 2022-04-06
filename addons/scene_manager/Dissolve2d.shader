@@ -2,7 +2,7 @@ shader_type canvas_item;
 
 uniform sampler2D dissolve_texture;
 uniform float dissolve_amount : hint_range(0, 1);
-uniform vec3 fade_color;
+uniform vec4 fade_color;
 uniform bool inverted;
 
 void fragment() {
