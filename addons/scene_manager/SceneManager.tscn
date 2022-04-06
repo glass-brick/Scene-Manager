@@ -1,20 +1,16 @@
-[gd_scene load_steps=7 format=3 uid="uid://j20v4cg7v8m1"]
+[gd_scene load_steps=6 format=3 uid="uid://j20v4cg7v8m1"]
 
-[ext_resource type="Animation" path="res://addons/scene_manager/ColorFade.tres" id="1"]
-[ext_resource type="Script" path="res://addons/scene_manager/SceneManager.gd" id="2"]
-[ext_resource type="Shader" path="res://addons/scene_manager/Dissolve2d.gdshader" id="3"]
-[ext_resource type="Texture2D" uid="uid://b45fitoojqhxe" path="res://addons/scene_manager/shader_patterns/squares.png" id="4"]
-[ext_resource type="Animation" path="res://addons/scene_manager/ShaderFade.tres" id="5"]
+[ext_resource type="Script" path="res://addons/scene_manager/SceneManager.gd" id="1_22br8"]
+[ext_resource type="Shader" path="res://addons/scene_manager/Dissolve2d.gdshader" id="2_853wq"]
+[ext_resource type="Animation" uid="uid://b5ny08khsh3q0" path="res://addons/scene_manager/ColorFade.tres" id="4_4pnrs"]
+[ext_resource type="Animation" uid="uid://dxr1r78uxitcq" path="res://addons/scene_manager/ShaderFade.tres" id="5_anecj"]
 
-[sub_resource type="ShaderMaterial" id="1"]
-shader = ExtResource( "3" )
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0imdi"]
+shader = ExtResource( "2_853wq" )
 shader_param/dissolve_amount = 0.0
-shader_param/fade_color = null
-shader_param/inverted = null
-shader_param/dissolve_texture = ExtResource( "4" )
 
 [node name="SceneManager" type="Node2D"]
-script = ExtResource( "2" )
+script = ExtResource( "1_22br8" )
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 layer = 3
@@ -24,19 +20,13 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="ShaderFade" type="ColorRect" parent="CanvasLayer"]
-material = SubResource( "1" )
+material = SubResource( "ShaderMaterial_0imdi" )
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/ColorFade = ExtResource( "1" )
-anims/ShaderFade = ExtResource( "5" )
+anims/ColorFade = ExtResource( "4_4pnrs" )
+anims/ShaderFade = ExtResource( "5_anecj" )
