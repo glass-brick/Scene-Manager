@@ -1,6 +1,14 @@
 # Godot Scene Manager (Godot 4.0 alpha version)
 
-**WARNING** This is lightly tested port of glass-brick's version. Godot 4.0 is still in alpha, but this version smooths over some of the changes.  This documentation has been lightly updated as well.
+---
+
+## **WARNING** This is lightly tested version. Godot 4.0 is still in alpha, but this version smooths over some of the changes. This documentation has been lightly updated as well.
+
+---
+
+## **WARNING** The Entity Singleton feature is not currently working in this branch.
+
+---
 
 ![Logo](/logo.png)
 
@@ -27,30 +35,6 @@ SceneManager.change_scene('res://demo/test.tscn')
 
 There are similar methods for reloading your scene and making a fade without transition, read the [API](#api) docs!
 
----
-
-We have also added the Entity Singleton feature in v0.3! It's an easy way to keep track of important Nodes that only exist once in your scenes (like your player or your level tilemap), regardless of the name they have.
-
-First off, you just have to set the flag and name in the editor:
-
-![Demonstration of Entity Singletons](/scene_manager_singleton_entity_demo.gif)
-
-Then just use it in your code like so:
-
-```gd
-SceneManager.get_entity("ColorRect").color = Color("#FFFFFF")
-```
-
-Of note, is that if you try and use this feature in a `_ready()` function you will get an error. To circumvent this, wait for the scene to be loaded like so:
-
-```gd
-func _ready():
-  await SceneManager.scene_loaded
-  SceneManager.get_entity("ColorRect").color = Color("#FFFFFF")
-```
-
-Be sure to read the docs down below for a more detailed explanation.
-
 # API
 
 ## SceneManager
@@ -63,27 +47,21 @@ The `path` paremeter accepts an absolute file path for your new scene (i.e: 'res
 
 You can pass the following options to this function in a dictionary:
 
-- `type : FadeTypes = (inferred from options, default is Fade)`: Style of the transition. `Fade` is a simple fade-to-black transition, while `ShaderFade` will use a black-and-white image to represent each pixel, allowing for custom transitions.
 - `speed : float = 2`: Speed of the moving transition.
 - `color : Color = Color('#000000')`: Color to use for the transition screen. It's black by default.
 - `wait_time : float = 0.5`: Time spent in the transition screen while switching scenes. Leaving it at 0 with fade will result in the screen not turning black, so it waits a little bit by default.
 - `no_scene_change : Bool = false`: If set to true, it will not change or reload the scene once the fade is complete
-
-The following options are only used when using a `ShaderFade`. If any of them are declared without providing a `"type"`, it will be inferred as `ShaderFade`.
-
-- `pattern : (String || Texture) = 'squares'`: Pattern to use for the transition. Using a simple name will load the premade patterns we have designed (you can see them in `addons/scene_manager/shader_patterns`). Otherwise, you may pass an absolute path to your own pattern `"res://my_pattern.png"` or a `Texture` object.
+- `pattern : (String || Texture) = 'fade'`: Pattern to use for the transition. Using a simple name will load the premade patterns we have designed (you can see them in `addons/scene_manager/shader_patterns`). Otherwise, you may pass an absolute path to your own pattern `"res://my_pattern.png"` or a `Texture` object. You can also specify `'fade'` for a simple fade transition.
 - `pattern_enter : (String || Texture) = pattern`: Same as `pattern`, but overrides the pattern only for the fade-to-black transition.
 - `pattern_leave : (String || Texture) = pattern`: Same as `pattern`, but overrides the pattern only for the fade-from-black transition.
-
-- `shader_pattern`, `shader_pattern_enter` and `shader_pattern_leave` were the old names for these options, they will still work but have been deprecated.
-
 - `invert_on_leave : Bool = true`: Wether the transition should invert when fading out of black. This usually looks better on, the effect is that the first pixels that turned black are the first ones that fade into the new screen. This generally works for "sweep" transitions like `"horizontal"`, but others such as `"curtains"` might look better with this flag turned off
-- `ease : (float || Bool) = 1.0`: Amount of ease the animation should have during the transition. For backwards compatibility, `true` becomes `0.5` and `false` becomes `1.0`.
-- `ease_enter : (float || Bool) = ease`: Amount of ease the animation should have during the fade-to-black transition.
-- `ease_leave : (float || Bool) = ease`: Amount of ease the animation should have during the fade-from-black transition.
+- `ease : float = 1.0`: Amount of ease the animation should have during the transition.
+- `ease_enter : float = ease`: Amount of ease the animation should have during the fade-to-black transition.
+- `ease_leave : float = ease`: Amount of ease the animation should have during the fade-from-black transition.
 
 The following patterns are available out-of-the-box:
 
+- `"fade"`
 - `"circle"`
 - `"curtains"`
 - `"diagonal"`
@@ -103,24 +81,9 @@ Of note, is that this method will not trigger the `scene_unloaded` signal, since
 
 This method functions exactly like `reload_scene({ "no_scene_change": true })`, it will simply trigger the transition used in options, without modifying anything. You can use the `fade_complete` signal if you want to change something while the screen is completely black.
 
-### `func get_entity(entity_name: String)`
-
-Get a reference to a named entity (node) in your scene. To define entity names go to the desired node in the editor inspector and you'll see two new properties: `Singleton entity` and `Entity name`. Check the `Singleton entity` checkbox to have this node saved to the SceneManager entity dictionary and write a friendly `Entity name` to be used in this function. Afterwards, you'll be able to access it within the scene.
-
-NOTE: If accessing the node in a `_ready()` method within your scene, `get_entity` will throw an error. This is because saving the entities to the SceneManager requires the scene to be completely loaded, which hasn't happened yet in the `_ready()` method. To circumvent this problem, you will have to wait until the scene is completely loaded. To do this, you can take advantage of the `scene_loaded` signal provided by `SceneManager`, like so:
-
-```gd
-await SceneManager.scene_loaded
-Player = SceneManager.get_entity("Player")
-```
-
 ### `is_transitioning: bool`
 
 This variable changes depending of wether a transition is active or not. You can use this to make sure a transition is finished before starting a new one if the `transition_finished` signal does not suit your use-case.
-
-### `FadeTypes`
-
-SceneManager defines this enum: `FadeTypes { Fade, ShaderFade }`. It can be accessed via `SceneManager.FadeTypes.Fade`
 
 ### Signals
 
