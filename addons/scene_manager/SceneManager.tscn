@@ -9,8 +9,9 @@
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 3 )
 shader_param/dissolve_amount = 0.0
-shader_param/fade_color = null
-shader_param/inverted = null
+shader_param/fade_color = Color( 0, 0, 0, 1 )
+shader_param/fade = false
+shader_param/inverted = false
 shader_param/dissolve_texture = ExtResource( 4 )
 
 [node name="SceneManager" type="Node2D"]
@@ -20,23 +21,11 @@ script = ExtResource( 2 )
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 layer = 3
 
-[node name="Fade" type="ColorRect" parent="CanvasLayer"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
-color = Color( 0, 0, 0, 0 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="ShaderFade" type="ColorRect" parent="CanvasLayer"]
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
 material = SubResource( 1 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/ColorFade = ExtResource( 1 )

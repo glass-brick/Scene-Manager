@@ -9,5 +9,5 @@ func _ready():
 func _on_Button_button_down():
 	if not SceneManager.is_transitioning:
 		SceneManager.change_scene(
-			'res://demo/test2.tscn', {"pattern_enter": "scribbles", "pattern_leave": "squares"}
+			'res://demo/test2.tscn', {"pattern_enter": "fade", "pattern_leave": "squares"}
 		)

@@ -61,27 +61,23 @@ The `path` paremeter accepts an absolute file path for your new scene (i.e: 'res
 
 You can pass the following options to this function in a dictionary:
 
-- `type : FadeTypes = (inferred from options, default is Fade)`: Style of the transition. `Fade` is a simple fade-to-black transition, while `ShaderFade` will use a black-and-white image to represent each pixel, allowing for custom transitions.
 - `speed : float = 2`: Speed of the moving transition.
 - `color : Color = Color('#000000')`: Color to use for the transition screen. It's black by default.
 - `wait_time : float = 0.5`: Time spent in the transition screen while switching scenes. Leaving it at 0 with fade will result in the screen not turning black, so it waits a little bit by default.
-- `no_scene_change : Bool = false`: If set to true, it will not change or reload the scene once the fade is complete
-
-The following options are only used when using a `ShaderFade`. If any of them are declared without providing a `"type"`, it will be inferred as `ShaderFade`.
-
-- `pattern : (String || Texture) = 'squares'`: Pattern to use for the transition. Using a simple name will load the premade patterns we have designed (you can see them in `addons/scene_manager/shader_patterns`). Otherwise, you may pass an absolute path to your own pattern `"res://my_pattern.png"` or a `Texture` object.
+- `skip_scene_change : Bool = false`: If set to true, skips the actual scene change/reload, leaving only the transition.
+- `skip_fade_out : Bool = false`: If set to true, skips the initial "fade" part of the transition
+- `skip_fade_in : Bool = false`: If set to true, skips the final "fade" part of the transition
+- `pattern : (String || Texture) = 'fade'`: Pattern to use for the transition. Using a simple name will load the premade patterns we have designed (you can see them in `addons/scene_manager/shader_patterns`). Otherwise, you may pass an absolute path to your own pattern `"res://my_pattern.png"` or a `Texture` object. You can also specify `'fade'` for a simple fade transition.
 - `pattern_enter : (String || Texture) = pattern`: Same as `pattern`, but overrides the pattern only for the fade-to-black transition.
 - `pattern_leave : (String || Texture) = pattern`: Same as `pattern`, but overrides the pattern only for the fade-from-black transition.
-
-- `shader_pattern`, `shader_pattern_enter` and `shader_pattern_leave` were the old names for these options, they will still work but have been deprecated.
-
 - `invert_on_leave : Bool = true`: Wether the transition should invert when fading out of black. This usually looks better on, the effect is that the first pixels that turned black are the first ones that fade into the new screen. This generally works for "sweep" transitions like `"horizontal"`, but others such as `"curtains"` might look better with this flag turned off
-- `ease : (float || Bool) = 1.0`: Amount of ease the animation should have during the transition. For backwards compatibility, `true` becomes `0.5` and `false` becomes `1.0`.
-- `ease_enter : (float || Bool) = ease`: Amount of ease the animation should have during the fade-to-black transition.
-- `ease_leave : (float || Bool) = ease`: Amount of ease the animation should have during the fade-from-black transition.
+- `ease : float = 1.0`: Amount of ease the animation should have during the transition.
+- `ease_enter : float = ease`: Amount of ease the animation should have during the fade-to-black transition.
+- `ease_leave : float = ease`: Amount of ease the animation should have during the fade-from-black transition.
 
 The following patterns are available out-of-the-box:
 
+- `"fade"`
 - `"circle"`
 - `"curtains"`
 - `"diagonal"`
@@ -101,6 +97,35 @@ Of note, is that this method will not trigger the `scene_unloaded` signal, since
 
 This method functions exactly like `reload_scene({ "no_scene_change": true })`, it will simply trigger the transition used in options, without modifying anything. You can use the `fade_complete` signal if you want to change something while the screen is completely black.
 
+### `func fade_out(options: Dictionary = defaultOptions)`
+
+This method fades out the screen, useful when you want to fade to black and do some calculations/processing manually. Works well in conjunction with the `"skip_fade_out"` option.
+
+```
+yield (SceneManager.fade_out(), "completed")
+// Do something
+SceneManager.change_scene(new_scene, { "skip_fade_out": true })
+```
+
+It can take the following options, with the same defaults as `change_scene`:
+
+- `speed`
+- `color`
+- `pattern`
+- `ease`
+
+### `func fade_in(options: Dictionary = defaultOptions)`
+
+This method fades in the screen, useful to do if you want an initial transition when opening the game.
+
+It can take the following options, with the same defaults as `change_scene`:
+
+- `speed`
+- `color`
+- `pattern`
+- `invert_on_leave`
+- `ease`
+
 ### `func get_entity(entity_name: String)`
 
 Get a reference to a named entity (node) in your scene. To define entity names go to the desired node in the editor inspector and you'll see two new properties: `Singleton entity` and `Entity name`. Check the `Singleton entity` checkbox to have this node saved to the SceneManager entity dictionary and write a friendly `Entity name` to be used in this function. Afterwards, you'll be able to access it within the scene.
@@ -116,13 +141,20 @@ Player = SceneManager.get_entity("Player")
 
 This variable changes depending of wether a transition is active or not. You can use this to make sure a transition is finished before starting a new one if the `transition_finished` signal does not suit your use-case.
 
-### `FadeTypes`
-
-SceneManager defines this enum: `FadeTypes { Fade, ShaderFade }`. It can be accessed via `SceneManager.FadeTypes.Fade`
-
 ### Signals
 
 - `scene_unloaded`: emitted when the first scene is unloaded
 - `scene_loaded`: emitted when the new scene is loaaded
 - `fade_complete`: emitted when the fade-to-black animation finishes
 - `transition_finished`: emitted when the transition finishes
+
+# Deprecation warnings
+
+The following deprecation warnings are in effect. These features may still work, but will be removed in the future. If you use any of the features below, please follow the instructions:
+
+- `type` option and `FadeTypes` enum: **remove entirely**. For normal fade transitions, use `"pattern": "fade"`.
+- `shader_pattern` option: replace for `pattern`
+- `shader_pattern_enter` option: replace for `pattern_enter`
+- `shader_pattern_leave` option: replace for `pattern_leave`
+- `no_scene_change` option: replace for `skip_scene_change`
+- `ease`, `ease_enter`, `ease_leave` options: do not use `bool` values. Replace `true -> 0.5` and `false -> 1.0`.

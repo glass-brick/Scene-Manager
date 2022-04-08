@@ -3,7 +3,7 @@
 [resource]
 resource_name = "ShaderFade"
 tracks/0/type = "value"
-tracks/0/path = NodePath("CanvasLayer/ShaderFade:material:shader_param/dissolve_amount")
+tracks/0/path = NodePath("CanvasLayer/ColorRect:material:shader_param/dissolve_amount")
 tracks/0/interp = 2
 tracks/0/loop_wrap = true
 tracks/0/imported = false
