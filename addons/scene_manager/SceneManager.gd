@@ -17,9 +17,12 @@ var default_options := {
 	"color": Color("#000000"),
 	"pattern": "fade",
 	"wait_time": 0.5,
+	"invert": false,
 	"invert_on_leave": true,
 	"ease": 1.0,
-	"no_scene_change": false,
+	"skip_scene_change": false,
+	"skip_fade_out": false,
+	"skip_fade_in": false,
 	"on_tree_enter": func(scene): null,
 	"on_ready": func(scene): null,
 }
@@ -36,7 +39,6 @@ var _previous_scene = null
 func _ready() -> void:
 	_set_singleton_entities()
 	scene_loaded.emit()
-	transition_finished.emit()
 
 func _set_singleton_entities() -> void:
 	singleton_entities = {}
@@ -96,26 +98,30 @@ func _process(_delta: float) -> void:
 func change_scene(path: Variant, setted_options: Dictionary = {}) -> void:
 	assert(path == null or path is String, 'Path must be a string')
 	var options = _get_final_options(setted_options)
-	await _fade_out(options)
+	if not options["skip_fade_out"]:
+		await fade_out(setted_options)
 	if not options["no_scene_change"]:
-		_replace_scene(path, options)
+		if path == null:
+			_reload_scene()
+		else:
+			_replace_scene(path, options)
 	await _tree.create_timer(options["wait_time"]).timeout
-	await _fade_in(options)
+	if not options["skip_fade_in"]:
+		await fade_in(setted_options)
 
 func reload_scene(setted_options: Dictionary = {}) -> void:
 	await change_scene(null, setted_options)
+
+func _reload_scene() -> void:
+	_tree.reload_current_scene()
+	await _tree.create_timer(0.0).timeout
+	_current_scene = _tree.current_scene
 
 func fade_in_place(setted_options: Dictionary = {}) -> void:
 	setted_options["no_scene_change"] = true
 	await change_scene(null, setted_options)
 
-func _replace_scene(path: Variant, options: Dictionary) -> void:
-	if path == null:
-		# if no path, assume we want a reload
-		_tree.reload_current_scene()
-		await _tree.create_timer(0.0).timeout
-		_current_scene = _tree.current_scene
-		return
+func _replace_scene(path: String, options: Dictionary) -> void:
 	_current_scene.free()
 	scene_unloaded.emit()
 	var following_scene: PackedScene = ResourceLoader.load(path, "PackedScene", 0)
@@ -126,7 +132,8 @@ func _replace_scene(path: Variant, options: Dictionary) -> void:
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
 
-func _fade_out(options: Dictionary) -> void:
+func fade_out(setted_options: Dictionary) -> void:
+	var options = _get_final_options(setted_options)
 	is_transitioning = true
 	_animation_player.playback_speed = options["speed"]
 
@@ -143,7 +150,8 @@ func _fade_out(options: Dictionary) -> void:
 	await _animation_player.animation_finished
 	fade_complete.emit()
 
-func _fade_in(options: Dictionary) -> void:
+func fade_in(setted_options: Dictionary) -> void:
+	var options = _get_final_options(setted_options)
 	_shader_blend_rect.material.set_shader_param(
 		"dissolve_texture", options["pattern_leave"]
 	)

@@ -81,7 +81,9 @@ You can pass the following options to this function in a dictionary:
 - `speed : float = 2`: Speed of the moving transition.
 - `color : Color = Color('#000000')`: Color to use for the transition screen. It's black by default.
 - `wait_time : float = 0.5`: Time spent in the transition screen while switching scenes. Leaving it at 0 with fade will result in the screen not turning black, so it waits a little bit by default.
-- `no_scene_change : Bool = false`: If set to true, it will not change or reload the scene once the fade is complete
+- `skip_scene_change : Bool = false`: If set to true, skips the actual scene change/reload, leaving only the transition.
+- `skip_fade_out : Bool = false`: If set to true, skips the initial "fade" part of the transition
+- `skip_fade_in : Bool = false`: If set to true, skips the final "fade" part of the transition
 - `pattern : (String || Texture) = 'fade'`: Pattern to use for the transition. Using a simple name will load the premade patterns we have designed (you can see them in `addons/scene_manager/shader_patterns`). Otherwise, you may pass an absolute path to your own pattern `"res://my_pattern.png"` or a `Texture` object. You can also specify `'fade'` for a simple fade transition.
 - `pattern_enter : (String || Texture) = pattern`: Same as `pattern`, but overrides the pattern only for the fade-to-black transition.
 - `pattern_leave : (String || Texture) = pattern`: Same as `pattern`, but overrides the pattern only for the fade-from-black transition.
@@ -112,6 +114,35 @@ Of note, is that this method will not trigger the `scene_unloaded` signal, since
 
 This method functions exactly like `reload_scene({ "no_scene_change": true })`, it will simply trigger the transition used in options, without modifying anything. You can use the `fade_complete` signal if you want to change something while the screen is completely black.
 
+### `func fade_out(options: Dictionary = defaultOptions)`
+
+This method fades out the screen, useful when you want to fade to black and do some calculations/processing manually. Works well in conjunction with the `"skip_fade_out"` option.
+
+```
+yield (SceneManager.fade_out(), "completed")
+// Do something
+SceneManager.change_scene(new_scene, { "skip_fade_out": true })
+```
+
+It can take the following options, with the same defaults as `change_scene`:
+
+- `speed`
+- `color`
+- `pattern`
+- `ease`
+
+### `func fade_in(options: Dictionary = defaultOptions)`
+
+This method fades in the screen, useful to do if you want an initial transition when opening the game.
+
+It can take the following options, with the same defaults as `change_scene`:
+
+- `speed`
+- `color`
+- `pattern`
+- `invert_on_leave`
+- `ease`
+
 ### `func get_entity(entity_name: String)`
 
 Get a reference to a named entity (node) in your scene. To define entity names go to the desired node in the editor inspector and you'll see two new properties: `Singleton entity` and `Entity name`. Check the `Singleton entity` checkbox to have this node saved to the SceneManager entity dictionary and write a friendly `Entity name` to be used in this function. Afterwards, you'll be able to access it within the scene.
@@ -133,3 +164,14 @@ This variable changes depending of wether a transition is active or not. You can
 - `scene_loaded`: emitted when the new scene is loaaded
 - `fade_complete`: emitted when the fade-to-black animation finishes
 - `transition_finished`: emitted when the transition finishes
+
+# Deprecation warnings
+
+The following deprecation warnings are in effect. These features may still work, but will be removed in the future. If you use any of the features below, please follow the instructions:
+
+- `type` option and `FadeTypes` enum: **remove entirely**. For normal fade transitions, use `"pattern": "fade"`.
+- `shader_pattern` option: replace for `pattern`
+- `shader_pattern_enter` option: replace for `pattern_enter`
+- `shader_pattern_leave` option: replace for `pattern_leave`
+- `no_scene_change` option: replace for `skip_scene_change`
+- `ease`, `ease_enter`, `ease_leave` options: do not use `bool` values. Replace `true -> 0.5` and `false -> 1.0`.
