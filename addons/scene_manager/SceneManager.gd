@@ -100,7 +100,7 @@ func change_scene(path: Variant, setted_options: Dictionary = {}) -> void:
 	var options = _get_final_options(setted_options)
 	if not options["skip_fade_out"]:
 		await fade_out(setted_options)
-	if not options["no_scene_change"]:
+	if not options["skip_scene_change"]:
 		if path == null:
 			_reload_scene()
 		else:
@@ -122,7 +122,7 @@ func fade_in_place(setted_options: Dictionary = {}) -> void:
 	await change_scene(null, setted_options)
 
 func _replace_scene(path: String, options: Dictionary) -> void:
-	_current_scene.free()
+	_current_scene.queue_free()
 	scene_unloaded.emit()
 	var following_scene: PackedScene = ResourceLoader.load(path, "PackedScene", 0)
 	_current_scene = following_scene.instantiate()
@@ -132,7 +132,7 @@ func _replace_scene(path: String, options: Dictionary) -> void:
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
 
-func fade_out(setted_options: Dictionary) -> void:
+func fade_out(setted_options: Dictionary= {}) -> void:
 	var options = _get_final_options(setted_options)
 	is_transitioning = true
 	_animation_player.playback_speed = options["speed"]
@@ -150,7 +150,7 @@ func fade_out(setted_options: Dictionary) -> void:
 	await _animation_player.animation_finished
 	fade_complete.emit()
 
-func fade_in(setted_options: Dictionary) -> void:
+func fade_in(setted_options: Dictionary = {}) -> void:
 	var options = _get_final_options(setted_options)
 	_shader_blend_rect.material.set_shader_param(
 		"dissolve_texture", options["pattern_leave"]
