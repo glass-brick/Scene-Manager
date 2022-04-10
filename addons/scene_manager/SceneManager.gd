@@ -165,7 +165,7 @@ func _reload_scene() -> void:
 
 
 func _replace_scene(path: String) -> void:
-	_current_scene.free()
+	_current_scene.queue_free()
 	emit_signal("scene_unloaded")
 	var following_scene = ResourceLoader.load(path)
 	_current_scene = following_scene.instance()
