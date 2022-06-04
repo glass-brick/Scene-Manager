@@ -2,7 +2,7 @@ shader_type canvas_item;
 
 uniform sampler2D dissolve_texture;
 uniform float dissolve_amount : hint_range(0.0, 1.0) = 0.5;
-uniform vec4 fade_color : hint_color = vec4(1.0, 1.0, 1.0, 1.0);
+uniform vec4 fade_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform bool fade = false;
 uniform bool inverted = false;
 
