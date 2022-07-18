@@ -74,14 +74,6 @@ func _set_singleton_entities() -> void:
 		singleton_entities[entity_name] = entity
 
 
-func get_entity(entity_name: String) -> Node:
-	assert(
-		singleton_entities.has(entity_name),
-		"Entity %s is not set as a singleton entity. Please define it in the editor." % entity_name
-	)
-	return singleton_entities[entity_name]
-
-
 func _load_pattern(pattern) -> Texture:
 	assert(
 		pattern is Texture or pattern is String,
@@ -135,6 +127,31 @@ func _process(_delta: float) -> void:
 		_previous_scene = _tree.current_scene
 
 
+func _reload_scene() -> void:
+	_tree.reload_current_scene()
+	yield(_tree.create_timer(0.0), "timeout")
+	_current_scene = _tree.current_scene
+
+
+func _replace_scene(scene) -> void:
+	_current_scene.queue_free()
+	emit_signal("scene_unloaded")
+	var following_scene = _load_scene_resource(scene)
+	_current_scene = following_scene.instance()
+	yield(_tree.create_timer(0.0), "timeout")
+	_root.add_child(_current_scene)
+	_tree.set_current_scene(_current_scene)
+
+
+func _load_scene_resource(scene) -> Resource:
+	if scene is PackedScene:
+		return scene
+	return ResourceLoader.load(scene)
+
+
+#region Public API
+
+
 func change_scene(scene, setted_options: Dictionary = {}) -> void:
 	var options = _get_final_options(setted_options)
 	if not options["skip_fade_out"]:
@@ -156,28 +173,6 @@ func reload_scene(setted_options: Dictionary = {}) -> void:
 func fade_in_place(setted_options: Dictionary = {}) -> void:
 	setted_options["skip_scene_change"] = true
 	yield(change_scene(null, setted_options), "completed")
-
-
-func _reload_scene() -> void:
-	_tree.reload_current_scene()
-	yield(_tree.create_timer(0.0), "timeout")
-	_current_scene = _tree.current_scene
-
-
-func _replace_scene(scene) -> void:
-	_current_scene.queue_free()
-	emit_signal("scene_unloaded")
-	var following_scene = _load_scene_resource(scene)
-	_current_scene = following_scene.instance()
-	yield(_tree.create_timer(0.0), "timeout")
-	_root.add_child(_current_scene)
-	_tree.set_current_scene(_current_scene)
-
-
-func _load_scene_resource(scene) -> Resource:
-	if scene is PackedScene:
-		return scene
-	return ResourceLoader.load(scene)
 
 
 func fade_out(setted_options: Dictionary = {}) -> void:
@@ -211,3 +206,13 @@ func fade_in(setted_options: Dictionary = {}) -> void:
 	yield(_animation_player, "animation_finished")
 	is_transitioning = false
 	emit_signal("transition_finished")
+
+
+func get_entity(entity_name: String) -> Node:
+	assert(
+		singleton_entities.has(entity_name),
+		"Entity %s is not set as a singleton entity. Please define it in the editor." % entity_name
+	)
+	return singleton_entities[entity_name]
+
+#endregion
