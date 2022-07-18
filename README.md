@@ -53,7 +53,7 @@ Be sure to read the docs down below for a more detailed explanation.
 
 ## SceneManager
 
-### `func change_scene(path: String?, options: Dictionary = defaultOptions) -> void`
+### `func change_scene(path: (String || PackedScene)?, options: Dictionary = defaultOptions) -> void`
 
 This method lets you easily change scenes with transitions. They're highly customizable and we will consider adding progressive loading if it's requested enough.
 
