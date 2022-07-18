@@ -11,17 +11,30 @@ script = ExtResource( 1 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color( 0.298039, 0.14902, 0.14902, 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
-[node name="Button" type="Button" parent="CanvasLayer/ColorRect" groups=["scene_manager_entity_nodes", "scene_manager_singleton_nodes"]]
-anchor_left = 0.4
-anchor_top = 0.4
-anchor_right = 0.6
-anchor_bottom = 0.6
+[node name="CenterContainer" type="CenterContainer" parent="CanvasLayer/ColorRect"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ColorRect/CenterContainer"]
+margin_left = 435.0
+margin_top = 278.0
+margin_right = 588.0
+margin_bottom = 322.0
+
+[node name="Button" type="Button" parent="CanvasLayer/ColorRect/CenterContainer/VBoxContainer" groups=["scene_manager_entity_nodes", "scene_manager_singleton_nodes"]]
+margin_right = 153.0
+margin_bottom = 20.0
 text = "Change Scene"
 __meta__ = {
-"_edit_use_anchors_": false,
 "entity_name": "Button"
+}
+
+[node name="Button2" type="Button" parent="CanvasLayer/ColorRect/CenterContainer/VBoxContainer" groups=["scene_manager_entity_nodes", "scene_manager_singleton_nodes"]]
+margin_top = 24.0
+margin_right = 153.0
+margin_bottom = 44.0
+text = "Custom Change Scene"
+__meta__ = {
+"entity_name": "CustomButton"
 }

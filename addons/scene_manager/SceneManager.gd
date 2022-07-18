@@ -11,6 +11,7 @@ onready var _root := _tree.get_root()
 onready var _current_scene := _tree.current_scene
 onready var _animation_player := $AnimationPlayer
 onready var _shader_blend_rect := $CanvasLayer/ColorRect
+var _user_animation_player: AnimationPlayer
 
 enum FadeTypes { Fade, ShaderFade }
 
@@ -25,12 +26,15 @@ var default_options := {
 	"skip_scene_change": false,
 	"skip_fade_out": false,
 	"skip_fade_in": false,
+	"animation_name": null
 }
 # extra_options = {
 #   "pattern_enter": DEFAULT_IMAGE,
 #   "pattern_leave": DEFAULT_IMAGE,
 #   "ease_enter": 1.0,
 #   "ease_leave": 1.0,
+#   "animation_name_enter": null,
+#		"animation_name_leave": null,
 # }
 
 var new_names := {
@@ -114,6 +118,10 @@ func _get_final_options(initial_options: Dictionary) -> Dictionary:
 		if not ease_key in options:
 			options[ease_key] = options["ease"]
 
+	for animation_name_key in ["animation_name_enter", "animation_name_leave"]:
+		if not animation_name_key in options:
+			options[animation_name_key] = options["animation_name"]
+
 	return options
 
 
@@ -136,17 +144,56 @@ func _reload_scene() -> void:
 func _replace_scene(scene) -> void:
 	_current_scene.queue_free()
 	emit_signal("scene_unloaded")
-	var following_scene = _load_scene_resource(scene)
+	var following_scene = _load_resource(scene)
 	_current_scene = following_scene.instance()
 	yield(_tree.create_timer(0.0), "timeout")
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
 
 
-func _load_scene_resource(scene) -> Resource:
-	if scene is PackedScene:
-		return scene
-	return ResourceLoader.load(scene)
+func _load_resource(resource) -> Resource:
+	if resource is PackedScene:
+		return resource
+	return ResourceLoader.load(resource)
+
+
+func _user_fade_out(options: Dictionary):
+	assert(_user_animation_player is AnimationPlayer, "No animation player was set.")
+	_user_animation_player.playback_speed = options["speed"]
+	_user_animation_player.play(options["animation_name_enter"])
+	yield(_user_animation_player, "animation_finished")
+
+
+func _user_fade_in(options: Dictionary):
+	assert(_user_animation_player is AnimationPlayer, "No animation player was set.")
+	_user_animation_player.playback_speed = options["speed"]
+	_user_animation_player.play_backwards(options["animation_name_leave"])
+	yield(_user_animation_player, "animation_finished")
+
+
+func _plugin_fade_out(options: Dictionary):
+	_animation_player.playback_speed = options["speed"]
+	_shader_blend_rect.material.set_shader_param("dissolve_texture", options["pattern_enter"])
+	_shader_blend_rect.material.set_shader_param("fade", not options["pattern_enter"])
+	_shader_blend_rect.material.set_shader_param("fade_color", options["color"])
+	_shader_blend_rect.material.set_shader_param("inverted", options["invert"])
+	var animation = _animation_player.get_animation("ShaderFade")
+	animation.track_set_key_transition(0, 0, options["ease_enter"])
+	_animation_player.play("ShaderFade")
+	yield(_animation_player, "animation_finished")
+
+
+func _plugin_fade_in(options: Dictionary):
+	_animation_player.playback_speed = options["speed"]
+	_shader_blend_rect.material.set_shader_param("dissolve_texture", options["pattern_leave"])
+	_shader_blend_rect.material.set_shader_param("fade", not options["pattern_leave"])
+	_shader_blend_rect.material.set_shader_param(
+		"inverted", not options["invert"] if options["invert_on_leave"] else options["invert"]
+	)
+	var animation = _animation_player.get_animation("ShaderFade")
+	animation.track_set_key_transition(0, 0, options["ease_leave"])
+	_animation_player.play_backwards("ShaderFade")
+	yield(_animation_player, "animation_finished")
 
 
 #region Public API
@@ -178,34 +225,45 @@ func fade_in_place(setted_options: Dictionary = {}) -> void:
 func fade_out(setted_options: Dictionary = {}) -> void:
 	var options = _get_final_options(setted_options)
 	is_transitioning = true
-	_animation_player.playback_speed = options["speed"]
-
-	_shader_blend_rect.material.set_shader_param("dissolve_texture", options["pattern_enter"])
-	_shader_blend_rect.material.set_shader_param("fade", not options["pattern_enter"])
-	_shader_blend_rect.material.set_shader_param("fade_color", options["color"])
-	_shader_blend_rect.material.set_shader_param("inverted", options["invert"])
-	var animation = _animation_player.get_animation("ShaderFade")
-	animation.track_set_key_transition(0, 0, options["ease_enter"])
-	_animation_player.play("ShaderFade")
-
-	yield(_animation_player, "animation_finished")
+	if options["animation_name_enter"]:
+		yield(_user_fade_out(options), "completed")
+	else:
+		yield(_plugin_fade_out(options), "completed")
 	emit_signal("fade_complete")
 
 
 func fade_in(setted_options: Dictionary = {}) -> void:
 	var options = _get_final_options(setted_options)
-	_shader_blend_rect.material.set_shader_param("dissolve_texture", options["pattern_leave"])
-	_shader_blend_rect.material.set_shader_param("fade", not options["pattern_leave"])
-	_shader_blend_rect.material.set_shader_param(
-		"inverted", not options["invert"] if options["invert_on_leave"] else options["invert"]
-	)
-	var animation = _animation_player.get_animation("ShaderFade")
-	animation.track_set_key_transition(0, 0, options["ease_leave"])
-	_animation_player.play_backwards("ShaderFade")
-
-	yield(_animation_player, "animation_finished")
+	if options["animation_name_leave"]:
+		if not options["animation_name_enter"]:
+			_animation_player.play("RESET")
+		yield(_user_fade_in(options), "completed")
+	else:
+		if options["animation_name_enter"]:
+			_user_animation_player.play("RESET")
+		yield(_plugin_fade_in(options), "completed")
 	is_transitioning = false
 	emit_signal("transition_finished")
+
+
+func set_animation_player(animation_player) -> void:
+	assert(
+		animation_player is String or animation_player is PackedScene,
+		"set_animation_player() must receive a string (path to AnimationPlayer.tscn) or a PackedScene"
+	)
+	var loaded_animation_player = _load_resource(animation_player).instance()
+	assert(
+		loaded_animation_player is AnimationPlayer,
+		(
+			"The scene loaded from set_animation_player() (%s) must receive an AnimationPlayer"
+			% _user_animation_player
+		)
+	)
+	if _user_animation_player is AnimationPlayer:
+		_user_animation_player.queue_free()
+	_user_animation_player = loaded_animation_player
+	$CanvasLayer.add_child(_user_animation_player)
+	_user_animation_player.play("RESET")
 
 
 func get_entity(entity_name: String) -> Node:

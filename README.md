@@ -13,7 +13,9 @@ Plugin for managing transitions and Node references between scenes. Expect more 
 
 Alternatively, you may download this repo from github and add the `addons` folder to your project, then enable it from your Project Settings~
 
-## How to use
+## Features
+
+**Simple functions to change/reload scenes with a nice transition** (no manual animation required)
 
 When SceneManager is installed, you will gain access to the `SceneManager` singleton. You can then trigger it's methods directly like so:
 
@@ -27,7 +29,39 @@ There are similar methods for reloading your scene and making a fade without tra
 
 ---
 
-We have also added the Entity Singleton feature in v0.3! It's an easy way to keep track of important Nodes that only exist once in your scenes (like your player or your level tilemap), regardless of the name they have.
+**Custom animations** (BETA)
+
+Now you can add your very own `AnimationPlayer` to complement the one packaged in SceneManager!
+
+First off, setup a new `Scene` that has an `AnimationPlayer` as its **root** node. Make and name all the animations you want, and make sure you have a `RESET` animation that keeps all your visuals out of the screen.
+
+![Custom animation setup](/custom_animation_setup.gif)
+
+Then, set your player in SceneManager via code (We recommend doing this as early as possible in your game. For example in the `_ready()` method of an autoload or your first scene):
+
+```gd
+SceneManager.set_animation_player('res://demo/animation_player.tscn')
+```
+
+Now, whenever you call `SceneManager.change_scene()` or any other transition function, you will be able to add new `animation_name`, `animation_name_enter` and/or `animation_name_leave` options with the name of your animation.
+
+You can even match an enter/leave pattern from `SceneManager`! Just remember that `animation_name` takes precedence, so you'll want to use the opposite enter/leave suffix on `animation_name`.
+
+```
+SceneManager.change_scene('res://demo/test2.tscn', {"animation_name_enter": "roll", "pattern_leave": "squares"})
+```
+
+![Custom animation demonstration](/custom_animation_showcase.gif)
+
+As always, check the demo in this repo or the [API](#api) docs for more info!
+
+**BETA DISCLOSURE**: This feature is brand-new, bug reports and suggestions are appreciated in the Github issues tab!
+
+---
+
+**Entity Singletons**
+
+An easy way to keep track of important Nodes that only exist once in your scenes (like your player or your level tilemap), regardless of the name they have.
 
 First off, you just have to set the flag and name in the editor:
 
@@ -62,7 +96,7 @@ but for ease-of-use we recommend using the `reload_scene(options)` function expl
 
 You can pass the following options to this function in a dictionary:
 
-- `speed : float = 2`: Speed of the moving transition.
+- `speed : float = 2`: Speed of the moving transition. (Also affects custom animations)
 - `color : Color = Color('#000000')`: Color to use for the transition screen. It's black by default.
 - `wait_time : float = 0.5`: Time spent in the transition screen while switching scenes. Leaving it at 0 with fade will result in the screen not turning black, so it waits a little bit by default.
 - `skip_scene_change : Bool = false`: If set to true, skips the actual scene change/reload, leaving only the transition.
@@ -75,6 +109,9 @@ You can pass the following options to this function in a dictionary:
 - `ease : float = 1.0`: Amount of ease the animation should have during the transition.
 - `ease_enter : float = ease`: Amount of ease the animation should have during the fade-to-black transition.
 - `ease_leave : float = ease`: Amount of ease the animation should have during the fade-from-black transition.
+- `animation_name : String`: Name of an animation set in `set_animation_player()` which will be played for both in and out transitions
+- `animation_name_enter : String`: Name of an animation set in `set_animation_player()` which will be played for the fade-to-black transition
+- `animation_name_leave : String`: Name of an animation set in `set_animation_player()` which will be played for the fade-from-black transition
 
 The following patterns are available out-of-the-box:
 
@@ -126,6 +163,25 @@ It can take the following options, with the same defaults as `change_scene`:
 - `pattern`
 - `invert_on_leave`
 - `ease`
+
+### `func set_animation_player(animation_player: String || PackedScene)`
+
+Set a custom `AnimationPlayer` make your own transitions easily. We recommend doing this only once as early as possible in your game, for example in the `_ready()` method of an autoload or your first scene.
+
+This method receives a path to (or a `PackedScene` of) the location of your `AnimationPlayer` scene.
+
+```gd
+SceneManager.set_animation_player('res://demo/animation_player.tscn')
+```
+
+Your `AnimationPlayer` scene must follow these rules:
+
+1. The root node **must** be a Godot `AnimationPlayer`
+2. The animation player **must** have a `RESET` animation that keeps all your graphics outside of the viewport. This is because the animation player will always be rendered on top of your screen, so any leftovers will always be rendered (you should notice right away if this is the case)
+
+Add your animations to this `AnimationPlayer` and then use their names in the options of any SceneManager transition function as `animation_name`, `animation_name_enter` or `animation_name_leave`
+
+Please check the demo files in this repository for a complete example.
 
 ### `func get_entity(entity_name: String)`
 

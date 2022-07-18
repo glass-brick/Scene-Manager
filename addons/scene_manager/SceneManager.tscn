@@ -1,6 +1,5 @@
 [gd_scene load_steps=7 format=2]
 
-[ext_resource path="res://addons/scene_manager/ColorFade.tres" type="Animation" id=1]
 [ext_resource path="res://addons/scene_manager/SceneManager.gd" type="Script" id=2]
 [ext_resource path="res://addons/scene_manager/Dissolve2d.shader" type="Shader" id=3]
 [ext_resource path="res://addons/scene_manager/shader_patterns/squares.png" type="Texture" id=4]
@@ -13,6 +12,21 @@ shader_param/fade_color = Color( 0, 0, 0, 1 )
 shader_param/fade = false
 shader_param/inverted = false
 shader_param/dissolve_texture = ExtResource( 4 )
+
+[sub_resource type="Animation" id=2]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("CanvasLayer/ColorRect:material:shader_param/dissolve_amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ 0.0 ]
+}
 
 [node name="SceneManager" type="Node2D"]
 pause_mode = 2
@@ -28,5 +42,6 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/ColorFade = ExtResource( 1 )
+method_call_mode = 1
+anims/RESET = SubResource( 2 )
 anims/ShaderFade = ExtResource( 5 )
