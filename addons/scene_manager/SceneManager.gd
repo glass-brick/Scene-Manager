@@ -135,15 +135,15 @@ func _process(_delta: float) -> void:
 		_previous_scene = _tree.current_scene
 
 
-func change_scene(path, setted_options: Dictionary = {}) -> void:
+func change_scene(scene, setted_options: Dictionary = {}) -> void:
 	var options = _get_final_options(setted_options)
 	if not options["skip_fade_out"]:
 		yield(fade_out(setted_options), "completed")
 	if not options["skip_scene_change"]:
-		if path == null:
+		if scene == null:
 			_reload_scene()
 		else:
-			_replace_scene(path)
+			_replace_scene(scene)
 	yield(_tree.create_timer(options["wait_time"]), "timeout")
 	if not options["skip_fade_in"]:
 		yield(fade_in(setted_options), "completed")
@@ -164,14 +164,20 @@ func _reload_scene() -> void:
 	_current_scene = _tree.current_scene
 
 
-func _replace_scene(path: String) -> void:
+func _replace_scene(scene) -> void:
 	_current_scene.queue_free()
 	emit_signal("scene_unloaded")
-	var following_scene = ResourceLoader.load(path)
+	var following_scene = _load_scene_resource(scene)
 	_current_scene = following_scene.instance()
 	yield(_tree.create_timer(0.0), "timeout")
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
+
+
+func _load_scene_resource(scene) -> Resource:
+	if scene is PackedScene:
+		return scene
+	return ResourceLoader.load(scene)
 
 
 func fade_out(setted_options: Dictionary = {}) -> void:

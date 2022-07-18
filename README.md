@@ -53,11 +53,12 @@ Be sure to read the docs down below for a more detailed explanation.
 
 ## SceneManager
 
-### `func change_scene(path: String?, options: Dictionary = defaultOptions) -> void`
+### `func change_scene(scene: (String || PackedScene)?, options: Dictionary = defaultOptions) -> void`
 
 This method lets you easily change scenes with transitions. They're highly customizable and we will consider adding progressive loading if it's requested enough.
 
-The `path` paremeter accepts an absolute file path for your new scene (i.e: 'res://demo/test.tscn'). If `null` is passed as the path, it will reload the current scene, but for ease-of-use we recommend using the `reload_scene(options)` function explained further down.
+The `scene` paremeter accepts an absolute file path for your new scene (i.e: 'res://demo/test.tscn') or a `PackedScene`. If `null` is passed as the scene, it will reload the current scene,
+but for ease-of-use we recommend using the `reload_scene(options)` function explained further down.
 
 You can pass the following options to this function in a dictionary:
 
