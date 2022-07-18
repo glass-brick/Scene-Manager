@@ -180,7 +180,6 @@ func _load_scene_resource(scene) -> Resource:
 	return ResourceLoader.load(scene)
 
 
-
 func fade_out(setted_options: Dictionary = {}) -> void:
 	var options = _get_final_options(setted_options)
 	is_transitioning = true
