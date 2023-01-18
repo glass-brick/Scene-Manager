@@ -152,10 +152,12 @@ func fade_out(setted_options: Dictionary= {}) -> void:
 
 func fade_in(setted_options: Dictionary = {}) -> void:
 	var options = _get_final_options(setted_options)
+	_animation_player.playback_speed = options["speed"]
 	_shader_blend_rect.material.set_shader_parameter(
 		"dissolve_texture", options["pattern_leave"]
 	)
 	_shader_blend_rect.material.set_shader_parameter("fade", !options["pattern_leave"])
+	_shader_blend_rect.material.set_shader_parameter("fade_color", options["color"])
 	_shader_blend_rect.material.set_shader_parameter("inverted", options["invert_on_leave"])
 	var animation = _animation_player.get_animation("ShaderFade")
 	animation.track_set_key_transition(0, 0, options["ease_leave"])
