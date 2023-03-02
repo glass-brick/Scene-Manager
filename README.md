@@ -13,4 +13,4 @@ All the README info has been moved to the new wiki!
 - [Wiki](https://github.com/glass-brick/Scene-Manager/wiki)
   - [Getting Started](https://github.com/glass-brick/Scene-Manager/wiki/Getting-started)
   - [Features](https://github.com/glass-brick/Scene-Manager/wiki/Features)
-  - [API docs](https://github.com/glass-brick/Scene-Manager/wiki/API)
+  - [API docs](<https://github.com/glass-brick/Scene-Manager/wiki/API-(Godot-3)>)
