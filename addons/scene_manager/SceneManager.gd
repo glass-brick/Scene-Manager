@@ -9,8 +9,8 @@ var is_transitioning := false
 @onready var _tree := get_tree()
 @onready var _root := _tree.get_root()
 @onready var _current_scene := _tree.current_scene
-@onready var _animation_player := $AnimationPlayer
-@onready var _shader_blend_rect := $CanvasLayer/ColorRect
+@onready var _animation_player : AnimationPlayer = $AnimationPlayer
+@onready var _shader_blend_rect : ColorRect = $CanvasLayer/ColorRect
 
 var default_options := {
 	"speed": 2,
@@ -25,6 +25,8 @@ var default_options := {
 	"skip_fade_in": false,
 	"on_tree_enter": func(scene): null,
 	"on_ready": func(scene): null,
+	"on_fade_out": func(): null,
+	"on_fade_in": func(): null,
 }
 # extra_options = {
 #   "pattern_enter": DEFAULT_IMAGE,
@@ -135,7 +137,7 @@ func _replace_scene(path: String, options: Dictionary) -> void:
 func fade_out(setted_options: Dictionary= {}) -> void:
 	var options = _get_final_options(setted_options)
 	is_transitioning = true
-	_animation_player.playback_speed = options["speed"]
+	_animation_player.speed_scale = options["speed"]
 
 	_shader_blend_rect.material.set_shader_parameter(
 		"dissolve_texture", options["pattern_enter"]
@@ -149,10 +151,11 @@ func fade_out(setted_options: Dictionary= {}) -> void:
 
 	await _animation_player.animation_finished
 	fade_complete.emit()
+	options["on_fade_out"].call()
 
 func fade_in(setted_options: Dictionary = {}) -> void:
 	var options = _get_final_options(setted_options)
-	_animation_player.playback_speed = options["speed"]
+	_animation_player.speed_scale = options["speed"]
 	_shader_blend_rect.material.set_shader_parameter(
 		"dissolve_texture", options["pattern_leave"]
 	)
@@ -166,3 +169,4 @@ func fade_in(setted_options: Dictionary = {}) -> void:
 	await _animation_player.animation_finished
 	is_transitioning = false
 	transition_finished.emit()
+	options["on_fade_in"].call()

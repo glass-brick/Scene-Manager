@@ -8,22 +8,12 @@
 
 config_version=5
 
-_global_script_classes=[{
-"base": "Object",
-"class": &"SceneManagerConstants",
-"language": &"GDScript",
-"path": "res://addons/scene_manager/SceneManagerConstants.gd"
-}]
-_global_script_class_icons={
-"SceneManagerConstants": ""
-}
-
 [application]
 
 config/name="Scene Manager"
 run/main_scene="res://demo/test.tscn"
-config/icon="res://logo.png"
 config/features=PackedStringArray("4.0")
+config/icon="res://logo.png"
 
 [autoload]
 
