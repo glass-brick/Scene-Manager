@@ -6,10 +6,10 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0imdi"]
 shader = ExtResource( "2_853wq" )
-shader_param/dissolve_amount = 0.0
-shader_param/fade_color = Color(0, 0, 0, 1)
-shader_param/fade = null
-shader_param/inverted = null
+shader_parameter/dissolve_amount = 0.0
+shader_parameter/fade_color = Color(0, 0, 0, 1)
+shader_parameter/fade = null
+shader_parameter/inverted = null
 
 [node name="SceneManager" type="Node2D"]
 script = ExtResource( "1_22br8" )
