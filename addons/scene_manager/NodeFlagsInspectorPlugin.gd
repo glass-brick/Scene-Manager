@@ -4,7 +4,7 @@ var SingletonCheckProperty = load('res://addons/scene_manager/SingletonCheckProp
 var SingletonNameProperty = load('res://addons/scene_manager/SingletonNameProperty.gd')
 
 
-func _can_handle(object: Variant):
+func _can_handle(object: Object) -> bool:
 	return object is Node
 
 
