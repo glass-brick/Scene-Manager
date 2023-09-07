@@ -134,7 +134,7 @@ func _replace_scene(path: Variant, options: Dictionary) -> void:
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
 
-func _load_scene_resource(scene: Variant) -> Resource:
+func _load_scene_resource(path: Variant) -> Resource:
 	if path is PackedScene:
 		return path
 	return ResourceLoader.load(path, "PackedScene", 0)
