@@ -98,7 +98,7 @@ func _process(_delta: float) -> void:
 		_previous_scene = _tree.current_scene
 
 func change_scene(path: Variant, setted_options: Dictionary = {}) -> void:
-	assert(path == null or path is String, 'Path must be a string')
+	assert(path == null or path is String or path is PackedScene, 'Path must be a string or a PackedScene')
 	var options = _get_final_options(setted_options)
 	if not options["skip_fade_out"]:
 		await fade_out(setted_options)
@@ -123,16 +123,21 @@ func fade_in_place(setted_options: Dictionary = {}) -> void:
 	setted_options["skip_scene_change"] = true
 	await change_scene(null, setted_options)
 
-func _replace_scene(path: String, options: Dictionary) -> void:
+func _replace_scene(path: Variant, options: Dictionary) -> void:
 	_current_scene.queue_free()
 	scene_unloaded.emit()
-	var following_scene: PackedScene = ResourceLoader.load(path, "PackedScene", 0)
+	var following_scene: PackedScene = _load_scene_resource(path)
 	_current_scene = following_scene.instantiate()
 	_current_scene.tree_entered.connect(options["on_tree_enter"].bind(_current_scene))
 	_current_scene.ready.connect(options["on_ready"].bind(_current_scene))
 	await _tree.create_timer(0.0).timeout
 	_root.add_child(_current_scene)
 	_tree.set_current_scene(_current_scene)
+
+func _load_scene_resource(path: Variant) -> Resource:
+	if path is PackedScene:
+		return path
+	return ResourceLoader.load(path, "PackedScene", 0)
 
 func fade_out(setted_options: Dictionary= {}) -> void:
 	var options = _get_final_options(setted_options)
