@@ -120,7 +120,7 @@ func _reload_scene() -> void:
 	_current_scene = _tree.current_scene
 
 func fade_in_place(setted_options: Dictionary = {}) -> void:
-	setted_options["no_scene_change"] = true
+	setted_options["skip_scene_change"] = true
 	await change_scene(null, setted_options)
 
 func _replace_scene(path: String, options: Dictionary) -> void:
