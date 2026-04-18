@@ -1,5 +1,6 @@
 extends Node2D
 
+signal fade_started
 signal fade_complete
 signal scene_unloaded
 signal scene_loaded
@@ -152,6 +153,7 @@ func fade_out(setted_options: Dictionary= {}) -> void:
 	_shader_blend_rect.material.set_shader_parameter("inverted", false)
 	var animation = _animation_player.get_animation("ShaderFade")
 	animation.track_set_key_transition(0, 0, options["ease_enter"])
+	fade_started.emit()
 	_animation_player.play("ShaderFade")
 
 	await _animation_player.animation_finished
@@ -169,6 +171,7 @@ func fade_in(setted_options: Dictionary = {}) -> void:
 	_shader_blend_rect.material.set_shader_parameter("inverted", options["invert_on_leave"])
 	var animation = _animation_player.get_animation("ShaderFade")
 	animation.track_set_key_transition(0, 0, options["ease_leave"])
+	fade_started.emit()
 	_animation_player.play_backwards("ShaderFade")
 
 	await _animation_player.animation_finished
