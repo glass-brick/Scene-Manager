@@ -17,7 +17,7 @@ var default_options := {
 	"color": Color("#000000"),
 	"pattern": "fade",
 	"wait_time": 0.5,
-	"invert": false,
+	"invert_on_enter": false,
 	"invert_on_leave": true,
 	"ease": 1.0,
 	"skip_scene_change": false,
@@ -149,7 +149,7 @@ func fade_out(setted_options: Dictionary= {}) -> void:
 	)
 	_shader_blend_rect.material.set_shader_parameter("fade", !options["pattern_enter"])
 	_shader_blend_rect.material.set_shader_parameter("fade_color", options["color"])
-	_shader_blend_rect.material.set_shader_parameter("inverted", false)
+	_shader_blend_rect.material.set_shader_parameter("inverted", options["invert_on_enter"])
 	var animation = _animation_player.get_animation("ShaderFade")
 	animation.track_set_key_transition(0, 0, options["ease_enter"])
 	_animation_player.play("ShaderFade")
