@@ -6,10 +6,11 @@ signal scene_unloaded
 signal scene_loaded
 signal transition_finished
 
+const SceneTreeAdapter = preload("res://addons/scene_manager/SceneTreeAdapter.gd")
+
 var is_transitioning := false
-@onready var _tree := get_tree()
-@onready var _root := _tree.get_root()
-@onready var _current_scene := _tree.current_scene
+var _adapter
+var _current_scene : Node
 @onready var _animation_player : AnimationPlayer = $AnimationPlayer
 @onready var _shader_blend_rect : ColorRect = $CanvasLayer/ColorRect
 
@@ -37,8 +38,12 @@ var default_options := {
 # }
 
 var _previous_scene = null
+var _is_swapping := false
 
 func _ready() -> void:
+	if not _adapter:
+		_adapter = SceneTreeAdapter.new(get_tree())
+	_current_scene = _adapter.get_current_scene()
 	scene_loaded.emit()
 
 func _load_pattern(pattern) -> Texture:
@@ -72,12 +77,19 @@ func _get_final_options(initial_options: Dictionary) -> Dictionary:
 	return options
 
 func _process(_delta: float) -> void:
-	if not is_instance_valid(_previous_scene) and _tree.current_scene:
-		_previous_scene = _tree.current_scene
-		_current_scene = _tree.current_scene
+	# While swapping, the tree still reports the outgoing scene; adopting it here would
+	# clobber the instance _replace_scene is about to install.
+	if not _adapter or _is_swapping:
+		return
+	var tree_scene = _adapter.get_current_scene()
+	if not is_instance_valid(tree_scene):
+		return
+	if not is_instance_valid(_previous_scene):
+		_previous_scene = tree_scene
+		_current_scene = tree_scene
 		scene_loaded.emit()
-	if _tree.current_scene != _previous_scene:
-		_previous_scene = _tree.current_scene
+	if tree_scene != _previous_scene:
+		_previous_scene = tree_scene
 
 func change_scene(path: Variant, setted_options: Dictionary = {}) -> void:
 	assert(path == null or path is String or path is PackedScene, 'Path must be a string or a PackedScene')
@@ -86,10 +98,10 @@ func change_scene(path: Variant, setted_options: Dictionary = {}) -> void:
 		await fade_out(setted_options)
 	if not options["skip_scene_change"]:
 		if path == null:
-			_reload_scene()
+			await _reload_scene()
 		else:
-			_replace_scene(path, options)
-	await _tree.create_timer(options["wait_time"]).timeout
+			await _replace_scene(path, options)
+	await _adapter.create_timer(options["wait_time"]).timeout
 	if not options["skip_fade_in"]:
 		await fade_in(setted_options)
 
@@ -97,24 +109,28 @@ func reload_scene(setted_options: Dictionary = {}) -> void:
 	await change_scene(null, setted_options)
 
 func _reload_scene() -> void:
-	_tree.reload_current_scene()
-	await _tree.create_timer(0.0).timeout
-	_current_scene = _tree.current_scene
+	_is_swapping = true
+	_adapter.reload_current_scene()
+	await _adapter.create_timer(0.0).timeout
+	_current_scene = _adapter.get_current_scene()
+	_is_swapping = false
 
 func fade_in_place(setted_options: Dictionary = {}) -> void:
 	setted_options["skip_scene_change"] = true
 	await change_scene(null, setted_options)
 
 func _replace_scene(path: Variant, options: Dictionary) -> void:
-	_current_scene.queue_free()
+	_is_swapping = true
+	_adapter.free_scene(_current_scene)
 	scene_unloaded.emit()
 	var following_scene: PackedScene = _load_scene_resource(path)
 	_current_scene = following_scene.instantiate()
 	_current_scene.tree_entered.connect(options["on_tree_enter"].bind(_current_scene))
 	_current_scene.ready.connect(options["on_ready"].bind(_current_scene))
-	await _tree.create_timer(0.0).timeout
-	_root.add_child(_current_scene)
-	_tree.set_current_scene(_current_scene)
+	await _adapter.create_timer(0.0).timeout
+	_adapter.add_scene(_current_scene)
+	_adapter.set_current_scene(_current_scene)
+	_is_swapping = false
 
 func _load_scene_resource(path: Variant) -> Resource:
 	if path is PackedScene:

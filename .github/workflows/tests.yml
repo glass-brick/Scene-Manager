@@ -1,0 +1,30 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gut:
+    name: GUT suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.0
+          use-dotnet: false
+          include-templates: false
+
+      - name: Import assets
+        run: godot --headless --import
+
+      - name: Run tests
+        run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+
+      # The GUT suite swaps scenes through a spy adapter, since a real swap would free
+      # the test runner. This drives the real SceneTree against the real autoload.
+      - name: Integration check
+        run: godot --headless res://demo/_integration_check.tscn
