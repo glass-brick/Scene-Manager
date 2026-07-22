@@ -11,6 +11,7 @@ signal background_load_finished(path: String)
 signal background_load_failed(path: String)
 
 const SceneTreeAdapter = preload("res://addons/scene_manager/SceneTreeAdapter.gd")
+const DEFAULT_LOADING_SCREEN = preload("res://addons/scene_manager/DefaultLoadingScreen.tscn")
 
 var is_transitioning := false
 var _adapter
@@ -238,9 +239,11 @@ func _resolve_scene(path: Variant, options: Dictionary) -> PackedScene:
 	return _take_ready_scene(path) if _ready_scenes.has(path) else null
 
 func _show_loading_screen(loading_screen: Variant) -> Node:
+	if loading_screen is bool:
+		loading_screen = DEFAULT_LOADING_SCREEN if loading_screen else null
 	if loading_screen == null:
 		return null
-	assert(loading_screen is PackedScene, "loading_screen must be a PackedScene")
+	assert(loading_screen is PackedScene, "loading_screen must be a PackedScene, true, or null")
 	var instance = loading_screen.instantiate()
 	_loading_screen_layer.add_child(instance)
 	return instance

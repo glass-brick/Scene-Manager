@@ -67,6 +67,36 @@ func test_min_loading_time_keeps_a_fast_load_on_screen():
 	assert_gt(elapsed, 0.3, "the loading screen should not flash past")
 	assert_eq(LoadingScreenFixture.removed_count, 1)
 
+func test_true_resolves_to_the_shipped_default_loading_screen():
+	var screen = _manager._show_loading_screen(true)
+	assert_not_null(screen, "true should select the bundled loading screen")
+	assert_eq(screen.scene_file_path, "res://addons/scene_manager/DefaultLoadingScreen.tscn")
+	assert_true(screen.has_method("set_progress"), "the manager drives it through set_progress")
+	screen.free()
+
+func test_false_and_null_show_nothing():
+	assert_null(_manager._show_loading_screen(false))
+	assert_null(_manager._show_loading_screen(null))
+
+func test_default_loading_screen_drives_its_progress_bar():
+	var screen = _manager.DEFAULT_LOADING_SCREEN.instantiate()
+	add_child_autofree(screen)
+	var bar = screen.get_node("CenterContainer/ProgressBar")
+	screen.set_progress(0.5)
+	assert_eq(bar.value, bar.max_value * 0.5)
+	screen.set_progress(1.0)
+	assert_eq(bar.value, bar.max_value)
+
+func test_a_transition_with_the_default_loading_screen_cleans_up():
+	await _manager.change_scene(SCENE_A, _harness.options({
+		"background_loading": true,
+		"loading_screen": true,
+		"min_loading_time": 0.2,
+	}))
+	assert_eq(LoadingScreenFixture.instantiated_count, 0, "should not be the test fixture")
+	assert_eq(_manager._loading_screen_layer.get_child_count(), 0)
+	assert_eq(_adapter.added_scenes[0].name, "SceneA")
+
 func test_preloaded_scenes_still_get_a_loading_screen():
 	_manager.preload_scene(SCENE_A)
 	await wait_for_signal(_manager.background_load_finished, 5)
