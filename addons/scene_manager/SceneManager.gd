@@ -224,15 +224,17 @@ func _resolve_scene(path: Variant, options: Dictionary) -> PackedScene:
 			return null
 
 	var loading_screen := _show_loading_screen(options["loading_screen"])
+	var min_loading_time : float = options["min_loading_time"]
 	var started := Time.get_ticks_msec()
-	while _pending_loads.has(path):
-		_report_progress(loading_screen, get_load_progress(path))
+	# The bar tracks whichever is slower, the real load or the minimum time, so a scene that
+	# loads instantly still fills over min_loading_time instead of snapping to full.
+	while true:
+		var elapsed := (Time.get_ticks_msec() - started) / 1000.0
+		var time_progress := 1.0 if min_loading_time <= 0.0 else minf(elapsed / min_loading_time, 1.0)
+		_report_progress(loading_screen, minf(get_load_progress(path), time_progress))
+		if not _pending_loads.has(path) and elapsed >= min_loading_time:
+			break
 		await _adapter.create_timer(0.0).timeout
-	_report_progress(loading_screen, 1.0)
-
-	var elapsed := (Time.get_ticks_msec() - started) / 1000.0
-	if elapsed < options["min_loading_time"]:
-		await _adapter.create_timer(options["min_loading_time"] - elapsed).timeout
 
 	if is_instance_valid(loading_screen):
 		loading_screen.queue_free()

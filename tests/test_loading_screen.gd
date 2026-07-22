@@ -71,6 +71,34 @@ func test_a_plain_change_scene_still_loads_synchronously():
 		"no threaded load when nothing asks for one")
 	assert_eq(LoadingScreenFixture.instantiated_count, 0)
 
+func test_progress_ramps_across_min_loading_time_instead_of_snapping():
+	# A fixture scene loads instantly, so without blending in elapsed time the bar would jump
+	# straight to full and then sit there for the whole min_loading_time.
+	await _manager.change_scene(SCENE_A, _harness.options({
+		"loading_screen": LOADING_SCREEN,
+		"min_loading_time": 0.4,
+	}))
+	var reports = LoadingScreenFixture.progress_reports
+	assert_gt(reports.size(), 5, "progress should be reported every frame")
+	assert_lt(reports[0], 0.5, "should start near empty")
+	assert_eq(reports[-1], 1.0, "and end full")
+
+	var partial := 0
+	for value in reports:
+		if value > 0.0 and value < 1.0:
+			partial += 1
+	assert_gt(partial, 3, "expected intermediate values, got %s" % [reports])
+
+func test_progress_never_goes_backwards():
+	await _manager.change_scene(SCENE_A, _harness.options({
+		"loading_screen": LOADING_SCREEN,
+		"min_loading_time": 0.3,
+	}))
+	var reports = LoadingScreenFixture.progress_reports
+	for i in range(1, reports.size()):
+		assert_true(reports[i] >= reports[i - 1],
+			"progress went backwards at %d: %s" % [i, reports])
+
 func test_min_loading_time_keeps_a_fast_load_on_screen():
 	var started := Time.get_ticks_msec()
 	await _manager.change_scene(SCENE_A, _harness.options({

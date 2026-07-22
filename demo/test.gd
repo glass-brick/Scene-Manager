@@ -16,6 +16,6 @@ func _on_button_down():
 					"pattern_leave": "squares",
 					"on_tree_enter": func(scene): scene.internal_variable += internal_variable,
 					"loading_screen": true,
-					"min_loading_time": 5.0,
+					"min_loading_time": 0.5,
 				},
 		)
