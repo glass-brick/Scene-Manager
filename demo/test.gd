@@ -3,8 +3,7 @@ extends Node
 var internal_variable = 42
 
 func _ready():
-	await SceneManager.scene_loaded
-	SceneManager.get_entity("Button").button_down.connect(_on_button_down)
+	$CanvasLayer/ColorRect/Button.button_down.connect(_on_button_down)
 
 func _on_button_down():
 	if not SceneManager.is_transitioning:

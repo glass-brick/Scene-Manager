@@ -36,28 +36,10 @@ var default_options := {
 #   "ease_leave": 1.0,
 # }
 
-var singleton_entities := {}
 var _previous_scene = null
 
 func _ready() -> void:
-	_set_singleton_entities()
 	scene_loaded.emit()
-
-func _set_singleton_entities() -> void:
-	singleton_entities = {}
-	var entities = _current_scene.get_tree().get_nodes_in_group(
-		SceneManagerConstants.SINGLETON_GROUP_NAME
-	)
-	for entity in entities:
-		var has_entity_name : bool = entity.has_meta(SceneManagerConstants.SINGLETON_META_NAME)
-		assert(has_entity_name,"The node was set as a singleton entity, but no entity name was provided.")
-		var entity_name = entity.get_meta(SceneManagerConstants.SINGLETON_META_NAME)
-		assert(not singleton_entities.has(entity_name),"The entity name %s is already being used more than once! Please check that your entity name is unique within the scene.")
-		singleton_entities[entity_name] = entity
-
-func get_entity(entity_name: String) -> Node:
-	assert(singleton_entities.has(entity_name),"Entity is not set as a singleton entity. Please define it in the editor.")
-	return singleton_entities[entity_name]
 
 func _load_pattern(pattern) -> Texture:
 	assert(pattern is Texture or pattern is String, "Pattern is not a valid Texture, absolute path, or built-in texture.")
@@ -93,7 +75,6 @@ func _process(_delta: float) -> void:
 	if not is_instance_valid(_previous_scene) and _tree.current_scene:
 		_previous_scene = _tree.current_scene
 		_current_scene = _tree.current_scene
-		_set_singleton_entities()
 		scene_loaded.emit()
 	if _tree.current_scene != _previous_scene:
 		_previous_scene = _tree.current_scene
