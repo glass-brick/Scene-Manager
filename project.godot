@@ -8,20 +8,24 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="Scene Manager"
 run/main_scene="res://demo/test.tscn"
-config/features=PackedStringArray("4.0")
+config/features=PackedStringArray("4.7")
 config/icon="res://logo.png"
 
 [autoload]
 
-SceneManager="*res://addons/scene_manager/SceneManager.tscn"
+SceneManager="*uid://j20v4cg7v8m1"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/scene_manager/plugin.cfg")
+enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/scene_manager/plugin.cfg")
 
 [physics]
 
