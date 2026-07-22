@@ -2,7 +2,7 @@
 
 ![Logo](/logo.png)
 
-Plugin for managing transitions and Node references between scenes. Expect more features to be added in the future!
+Plugin for managing transitions and Node references between scenes, with optional loading screens!
 
 ![Demonstration of Shader Fades](/scene_manager_demo.gif)
 

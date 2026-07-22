@@ -23,6 +23,10 @@ config/icon="res://logo.png"
 
 SceneManager="*uid://j20v4cg7v8m1"
 
+[editor]
+
+movie_writer/movie_file="/var/mnt/big_chungus/INDEX/Projects/GlassBrick/Plugins/Scene Manager - Godot 4/recordings/recording.avi"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/scene_manager/plugin.cfg")
