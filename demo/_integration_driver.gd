@@ -9,10 +9,15 @@ func _ready() -> void:
 	await SceneManager.change_scene("res://demo/test2.tscn", {"speed": 20, "wait_time": 0.0})
 	_expect(failures, "Level2", "plain change_scene")
 
+	SceneManager.preload_scene("res://demo/test.tscn")
+	await SceneManager.background_load_finished
+	if not SceneManager.is_scene_ready("res://demo/test.tscn"):
+		failures.append("preload_scene did not mark the scene ready")
+
 	await SceneManager.change_scene("res://demo/test.tscn", {
-		"speed": 20, "wait_time": 0.0, "pattern": "squares",
+		"speed": 20, "wait_time": 0.0, "background_loading": true, "pattern": "squares",
 	})
-	_expect(failures, "Level1", "patterned change_scene")
+	_expect(failures, "Level1", "background change_scene")
 
 	await SceneManager.change_scene("res://demo/test2.tscn", {
 		"speed": 20, "wait_time": 0.0, "skip_fade_out": true,

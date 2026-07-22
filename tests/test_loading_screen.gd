@@ -1,0 +1,78 @@
+extends GutTest
+
+const Harness = preload("res://tests/helpers/harness.gd")
+const LoadingScreenFixture = preload("res://tests/fixtures/loading_screen.gd")
+const LOADING_SCREEN = preload("res://tests/fixtures/loading_screen.tscn")
+const SCENE_A = "res://tests/fixtures/scene_a.tscn"
+
+var _harness
+var _manager
+var _adapter
+
+func before_each():
+	LoadingScreenFixture.reset()
+	_harness = Harness.new(self, get_tree())
+	_manager = _harness.manager
+	_adapter = _harness.adapter
+
+func after_each():
+	await wait_process_frames(1)
+
+func test_loading_screen_is_shown_during_a_background_load():
+	await _manager.change_scene(SCENE_A, _harness.options({
+		"background_loading": true,
+		"loading_screen": LOADING_SCREEN,
+	}))
+	assert_eq(LoadingScreenFixture.instantiated_count, 1)
+
+func test_loading_screen_receives_progress_ending_at_one():
+	await _manager.change_scene(SCENE_A, _harness.options({
+		"background_loading": true,
+		"loading_screen": LOADING_SCREEN,
+	}))
+	var reports = LoadingScreenFixture.progress_reports
+	assert_gt(reports.size(), 0, "set_progress should be called")
+	assert_eq(reports[-1], 1.0, "the last report should be a completed load")
+
+func test_loading_screen_is_removed_before_the_transition_ends():
+	await _manager.change_scene(SCENE_A, _harness.options({
+		"background_loading": true,
+		"loading_screen": LOADING_SCREEN,
+	}))
+	assert_eq(LoadingScreenFixture.removed_count, 1, "loading screen should be torn down")
+	assert_eq(_manager._loading_screen_layer.get_child_count(), 0)
+
+func test_loading_screen_sits_above_the_fade_overlay():
+	var fade_layer = _manager.get_node("CanvasLayer")
+	assert_gt(_manager._loading_screen_layer.layer, fade_layer.layer,
+		"an opaque fade would hide the loading screen otherwise")
+
+func test_no_loading_screen_when_the_option_is_unset():
+	await _manager.change_scene(SCENE_A, _harness.options({"background_loading": true}))
+	assert_eq(LoadingScreenFixture.instantiated_count, 0)
+
+func test_blocking_loads_get_no_loading_screen():
+	await _manager.change_scene(SCENE_A, _harness.options({"loading_screen": LOADING_SCREEN}))
+	assert_eq(LoadingScreenFixture.instantiated_count, 0,
+		"a synchronous load cannot animate anything")
+
+func test_min_loading_time_keeps_a_fast_load_on_screen():
+	var started := Time.get_ticks_msec()
+	await _manager.change_scene(SCENE_A, _harness.options({
+		"background_loading": true,
+		"loading_screen": LOADING_SCREEN,
+		"min_loading_time": 0.3,
+	}))
+	var elapsed := (Time.get_ticks_msec() - started) / 1000.0
+	assert_gt(elapsed, 0.3, "the loading screen should not flash past")
+	assert_eq(LoadingScreenFixture.removed_count, 1)
+
+func test_preloaded_scenes_still_get_a_loading_screen():
+	_manager.preload_scene(SCENE_A)
+	await wait_for_signal(_manager.background_load_finished, 5)
+	await _manager.change_scene(SCENE_A, _harness.options({
+		"loading_screen": LOADING_SCREEN,
+		"min_loading_time": 0.1,
+	}))
+	assert_eq(LoadingScreenFixture.instantiated_count, 1)
+	assert_eq(LoadingScreenFixture.removed_count, 1)
