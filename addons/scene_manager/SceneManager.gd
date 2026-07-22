@@ -15,10 +15,10 @@ const DEFAULT_LOADING_SCREEN = preload("res://addons/scene_manager/DefaultLoadin
 
 var is_transitioning := false
 var _adapter
-var _current_scene : Node
-@onready var _animation_player : AnimationPlayer = $AnimationPlayer
-@onready var _shader_blend_rect : ColorRect = $CanvasLayer/ColorRect
-@onready var _loading_screen_layer : CanvasLayer = $LoadingScreenLayer
+var _current_scene: Node
+@onready var _animation_player: AnimationPlayer = $AnimationPlayer
+@onready var _shader_blend_rect: ColorRect = $CanvasLayer/ColorRect
+@onready var _loading_screen_layer: CanvasLayer = $LoadingScreenLayer
 
 var default_options := {
 	"speed": 2,
@@ -35,10 +35,10 @@ var default_options := {
 	"loading_screen": null,
 	"min_loading_time": 0.0,
 	"cache_mode": ResourceLoader.CACHE_MODE_IGNORE,
-	"on_tree_enter": func(scene): null,
-	"on_ready": func(scene): null,
-	"on_fade_out": func(): null,
-	"on_fade_in": func(): null,
+	"on_tree_enter": func(scene): return,
+	"on_ready": func(scene): return,
+	"on_fade_out": func(): return,
+	"on_fade_in": func(): return,
 }
 # extra_options = {
 #   "pattern_enter": DEFAULT_IMAGE,
@@ -49,10 +49,11 @@ var default_options := {
 
 var _previous_scene = null
 var _is_swapping := false
-var _pending_loads := {}
-var _ready_scenes := {}
-var _discarded_loads := {}
-var _failed_loads := {}
+var _pending_loads := { }
+var _ready_scenes := { }
+var _discarded_loads := { }
+var _failed_loads := { }
+
 
 func _ready() -> void:
 	if not _adapter:
@@ -60,15 +61,20 @@ func _ready() -> void:
 	_current_scene = _adapter.get_current_scene()
 	scene_loaded.emit()
 
+
 func _load_pattern(pattern) -> Texture:
-	assert(pattern is Texture or pattern is String, "Pattern is not a valid Texture, absolute path, or built-in texture.")
+	assert(
+			pattern is Texture or pattern is String,
+			"Pattern is not a valid Texture, absolute path, or built-in texture.",
+	)
 	if pattern is String:
 		if pattern.is_absolute_path():
 			return load(pattern)
-		elif pattern == 'fade':
+		if pattern == 'fade':
 			return null
 		return load("res://addons/scene_manager/shader_patterns/%s.png" % pattern)
 	return pattern
+
 
 func _get_final_options(initial_options: Dictionary) -> Dictionary:
 	var options = initial_options.duplicate()
@@ -90,6 +96,7 @@ func _get_final_options(initial_options: Dictionary) -> Dictionary:
 
 	return options
 
+
 func preload_scene(path: String, cache_mode: int = ResourceLoader.CACHE_MODE_IGNORE) -> void:
 	if _ready_scenes.has(path) or _pending_loads.has(path):
 		return
@@ -104,19 +111,23 @@ func preload_scene(path: String, cache_mode: int = ResourceLoader.CACHE_MODE_IGN
 	_pending_loads[path] = 0.0
 	background_load_started.emit(path)
 
+
 func is_scene_ready(path: String) -> bool:
 	return _ready_scenes.has(path)
+
 
 func get_load_progress(path: String) -> float:
 	if _ready_scenes.has(path):
 		return 1.0
 	return _pending_loads.get(path, 0.0)
 
+
 func drop_preloaded_scene(path: String) -> void:
 	_ready_scenes.erase(path)
 	# Godot cannot cancel a threaded request, so in-flight loads are discarded on arrival.
 	if _pending_loads.has(path):
 		_discarded_loads[path] = true
+
 
 func _poll_pending_loads() -> void:
 	for path in _pending_loads.keys():
@@ -140,10 +151,12 @@ func _poll_pending_loads() -> void:
 			push_error("SceneManager: failed to load %s" % path)
 			background_load_failed.emit(path)
 
+
 func _take_ready_scene(path: String) -> PackedScene:
 	var scene = _ready_scenes[path]
 	_ready_scenes.erase(path)
 	return scene
+
 
 func _process(_delta: float) -> void:
 	_poll_pending_loads()
@@ -161,8 +174,12 @@ func _process(_delta: float) -> void:
 	if tree_scene != _previous_scene:
 		_previous_scene = tree_scene
 
-func change_scene(path: Variant, setted_options: Dictionary = {}) -> void:
-	assert(path == null or path is String or path is PackedScene, 'Path must be a string or a PackedScene')
+
+func change_scene(path: Variant, setted_options: Dictionary = { }) -> void:
+	assert(
+			path == null or path is String or path is PackedScene,
+			'Path must be a string or a PackedScene',
+	)
 	var options = _get_final_options(setted_options)
 	# Kick the load before the fade so the two overlap.
 	if path is String and _should_load_in_background(options):
@@ -183,8 +200,10 @@ func change_scene(path: Variant, setted_options: Dictionary = {}) -> void:
 	if not options["skip_fade_in"]:
 		await fade_in(setted_options)
 
-func reload_scene(setted_options: Dictionary = {}) -> void:
+
+func reload_scene(setted_options: Dictionary = { }) -> void:
 	await change_scene(null, setted_options)
+
 
 func _reload_scene() -> void:
 	_is_swapping = true
@@ -193,9 +212,11 @@ func _reload_scene() -> void:
 	_current_scene = _adapter.get_current_scene()
 	_is_swapping = false
 
-func fade_in_place(setted_options: Dictionary = {}) -> void:
+
+func fade_in_place(setted_options: Dictionary = { }) -> void:
 	setted_options["skip_scene_change"] = true
 	await change_scene(null, setted_options)
+
 
 func _replace_scene(following_scene: PackedScene, options: Dictionary) -> void:
 	_is_swapping = true
@@ -208,6 +229,7 @@ func _replace_scene(following_scene: PackedScene, options: Dictionary) -> void:
 	_adapter.add_scene(_current_scene)
 	_adapter.set_current_scene(_current_scene)
 	_is_swapping = false
+
 
 func _resolve_scene(path: Variant, options: Dictionary) -> PackedScene:
 	if path is PackedScene:
@@ -224,13 +246,16 @@ func _resolve_scene(path: Variant, options: Dictionary) -> PackedScene:
 			return null
 
 	var loading_screen := _show_loading_screen(options["loading_screen"])
-	var min_loading_time : float = options["min_loading_time"]
+	var min_loading_time: float = options["min_loading_time"]
 	var started := Time.get_ticks_msec()
 	# The bar tracks whichever is slower, the real load or the minimum time, so a scene that
 	# loads instantly still fills over min_loading_time instead of snapping to full.
 	while true:
 		var elapsed := (Time.get_ticks_msec() - started) / 1000.0
-		var time_progress := 1.0 if min_loading_time <= 0.0 else minf(elapsed / min_loading_time, 1.0)
+		var time_progress := 1.0 if min_loading_time <= 0.0 else minf(
+				elapsed / min_loading_time,
+				1.0,
+		)
 		_report_progress(loading_screen, minf(get_load_progress(path), time_progress))
 		if not _pending_loads.has(path) and elapsed >= min_loading_time:
 			break
@@ -240,19 +265,21 @@ func _resolve_scene(path: Variant, options: Dictionary) -> PackedScene:
 		loading_screen.queue_free()
 	return _take_ready_scene(path) if _ready_scenes.has(path) else null
 
+
 func _should_load_in_background(options: Dictionary) -> bool:
 	# A loading screen and a minimum loading time only mean anything while the load runs off
 	# the main thread, so asking for either implies background loading.
 	return (
-		options["background_loading"]
-		or options["min_loading_time"] > 0.0
+		options["background_loading"] or options["min_loading_time"] > 0.0
 		or _wants_loading_screen(options["loading_screen"])
 	)
+
 
 func _wants_loading_screen(loading_screen: Variant) -> bool:
 	if loading_screen is bool:
 		return loading_screen
 	return loading_screen != null
+
 
 func _show_loading_screen(loading_screen: Variant) -> Node:
 	if not _wants_loading_screen(loading_screen):
@@ -264,19 +291,19 @@ func _show_loading_screen(loading_screen: Variant) -> Node:
 	_loading_screen_layer.add_child(instance)
 	return instance
 
+
 func _report_progress(loading_screen: Node, progress: float) -> void:
 	if is_instance_valid(loading_screen) and loading_screen.has_method("set_progress"):
 		loading_screen.set_progress(progress)
 
-func fade_out(setted_options: Dictionary= {}) -> void:
+
+func fade_out(setted_options: Dictionary = { }) -> void:
 	var options = _get_final_options(setted_options)
 	is_transitioning = true
 	_animation_player.speed_scale = options["speed"]
 
-	_shader_blend_rect.material.set_shader_parameter(
-		"dissolve_texture", options["pattern_enter"]
-	)
-	_shader_blend_rect.material.set_shader_parameter("fade", !options["pattern_enter"])
+	_shader_blend_rect.material.set_shader_parameter("dissolve_texture", options["pattern_enter"])
+	_shader_blend_rect.material.set_shader_parameter("fade", ! options["pattern_enter"])
 	_shader_blend_rect.material.set_shader_parameter("fade_color", options["color"])
 	_shader_blend_rect.material.set_shader_parameter("inverted", options["invert_on_enter"])
 	var animation = _animation_player.get_animation("ShaderFade")
@@ -288,13 +315,12 @@ func fade_out(setted_options: Dictionary= {}) -> void:
 	fade_complete.emit()
 	options["on_fade_out"].call()
 
-func fade_in(setted_options: Dictionary = {}) -> void:
+
+func fade_in(setted_options: Dictionary = { }) -> void:
 	var options = _get_final_options(setted_options)
 	_animation_player.speed_scale = options["speed"]
-	_shader_blend_rect.material.set_shader_parameter(
-		"dissolve_texture", options["pattern_leave"]
-	)
-	_shader_blend_rect.material.set_shader_parameter("fade", !options["pattern_leave"])
+	_shader_blend_rect.material.set_shader_parameter("dissolve_texture", options["pattern_leave"])
+	_shader_blend_rect.material.set_shader_parameter("fade", ! options["pattern_leave"])
 	_shader_blend_rect.material.set_shader_parameter("fade_color", options["color"])
 	_shader_blend_rect.material.set_shader_parameter("inverted", options["invert_on_leave"])
 	var animation = _animation_player.get_animation("ShaderFade")
