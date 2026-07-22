@@ -165,7 +165,7 @@ func change_scene(path: Variant, setted_options: Dictionary = {}) -> void:
 	assert(path == null or path is String or path is PackedScene, 'Path must be a string or a PackedScene')
 	var options = _get_final_options(setted_options)
 	# Kick the load before the fade so the two overlap.
-	if path is String and options["background_loading"]:
+	if path is String and _should_load_in_background(options):
 		preload_scene(path, options["cache_mode"])
 	if not options["skip_fade_out"]:
 		await fade_out(setted_options)
@@ -217,7 +217,7 @@ func _resolve_scene(path: Variant, options: Dictionary) -> PackedScene:
 		if _failed_loads.erase(path):
 			return null
 		# A blocking load cannot animate anything, so it never gets a loading screen.
-		if not options["background_loading"]:
+		if not _should_load_in_background(options):
 			return ResourceLoader.load(path, "PackedScene", options["cache_mode"])
 		preload_scene(path, options["cache_mode"])
 		if not _pending_loads.has(path):
@@ -238,11 +238,25 @@ func _resolve_scene(path: Variant, options: Dictionary) -> PackedScene:
 		loading_screen.queue_free()
 	return _take_ready_scene(path) if _ready_scenes.has(path) else null
 
-func _show_loading_screen(loading_screen: Variant) -> Node:
+func _should_load_in_background(options: Dictionary) -> bool:
+	# A loading screen and a minimum loading time only mean anything while the load runs off
+	# the main thread, so asking for either implies background loading.
+	return (
+		options["background_loading"]
+		or options["min_loading_time"] > 0.0
+		or _wants_loading_screen(options["loading_screen"])
+	)
+
+func _wants_loading_screen(loading_screen: Variant) -> bool:
 	if loading_screen is bool:
-		loading_screen = DEFAULT_LOADING_SCREEN if loading_screen else null
-	if loading_screen == null:
+		return loading_screen
+	return loading_screen != null
+
+func _show_loading_screen(loading_screen: Variant) -> Node:
+	if not _wants_loading_screen(loading_screen):
 		return null
+	if loading_screen is bool:
+		loading_screen = DEFAULT_LOADING_SCREEN
 	assert(loading_screen is PackedScene, "loading_screen must be a PackedScene, true, or null")
 	var instance = loading_screen.instantiate()
 	_loading_screen_layer.add_child(instance)

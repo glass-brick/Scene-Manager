@@ -51,10 +51,25 @@ func test_no_loading_screen_when_the_option_is_unset():
 	await _manager.change_scene(SCENE_A, _harness.options({"background_loading": true}))
 	assert_eq(LoadingScreenFixture.instantiated_count, 0)
 
-func test_blocking_loads_get_no_loading_screen():
+func test_asking_for_a_loading_screen_is_enough():
+	# A loading screen is meaningless during a blocking load, so requesting one has to imply
+	# background loading — otherwise the option silently does nothing.
 	await _manager.change_scene(SCENE_A, _harness.options({"loading_screen": LOADING_SCREEN}))
-	assert_eq(LoadingScreenFixture.instantiated_count, 0,
-		"a synchronous load cannot animate anything")
+	assert_eq(LoadingScreenFixture.instantiated_count, 1)
+	assert_eq(_adapter.added_scenes[0].name, "SceneA")
+
+func test_min_loading_time_alone_is_also_enough():
+	var started := Time.get_ticks_msec()
+	await _manager.change_scene(SCENE_A, _harness.options({"min_loading_time": 0.3}))
+	var elapsed := (Time.get_ticks_msec() - started) / 1000.0
+	assert_gt(elapsed, 0.3, "min_loading_time must be honoured without background_loading")
+
+func test_a_plain_change_scene_still_loads_synchronously():
+	watch_signals(_manager)
+	await _manager.change_scene(SCENE_A, _harness.options())
+	assert_signal_not_emitted(_manager, "background_load_started",
+		"no threaded load when nothing asks for one")
+	assert_eq(LoadingScreenFixture.instantiated_count, 0)
 
 func test_min_loading_time_keeps_a_fast_load_on_screen():
 	var started := Time.get_ticks_msec()
