@@ -86,9 +86,9 @@ func test_min_loading_time_alone_is_also_enough():
 	assert_gt(elapsed, 0.3, "min_loading_time must be honoured without background_loading")
 
 
-func test_a_plain_change_scene_still_loads_synchronously():
+func test_a_background_loading_disabled_change_scene_loads_synchronously():
 	watch_signals(_manager)
-	await _manager.change_scene(SCENE_A, _harness.options())
+	await _manager.change_scene(SCENE_A, _harness.options({ "background_loading": false }))
 	assert_signal_not_emitted(
 			_manager,
 			"background_load_started",
