@@ -95,7 +95,7 @@ var default_options := {
 	"skip_scene_change": false,
 	"skip_fade_out": false,
 	"skip_fade_in": false,
-	"background_loading": false,
+	"background_loading": true,
 	"loading_screen": null,
 	"min_loading_time": 0.0,
 	"cache_mode": ResourceLoader.CACHE_MODE_IGNORE,
