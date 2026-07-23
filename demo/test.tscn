@@ -1,19 +1,19 @@
-[gd_scene load_steps=2 format=3 uid="uid://yllaweggorku"]
+[gd_scene format=3 uid="uid://yllaweggorku"]
 
-[ext_resource type="Script" path="res://demo/test.gd" id="1"]
+[ext_resource type="Script" uid="uid://0ydqxk23t6f5" path="res://demo/test.gd" id="1"]
 
-[node name="Level1" type="Node"]
+[node name="Level1" type="Node" unique_id=1439124775]
 script = ExtResource("1")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=113942977]
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer" unique_id=1447329642]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.298039, 0.14902, 0.14902, 1)
 
-[node name="Button" type="Button" parent="CanvasLayer/ColorRect" groups=["scene_manager_entity_nodes"]]
+[node name="Button" type="Button" parent="CanvasLayer/ColorRect" unique_id=1126973035]
 layout_mode = 0
 anchor_left = 0.4
 anchor_top = 0.4
@@ -22,4 +22,3 @@ anchor_bottom = 0.6
 theme_override_constants/outline_size = 0
 theme_override_font_sizes/font_size = 16
 text = "Change Scene"
-metadata/entity_name = "Button"
