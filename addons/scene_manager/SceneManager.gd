@@ -18,6 +18,9 @@ extends Node2D
 ## [/codeblock]
 ## Use [method preload_scene] to start that load earlier still. Every method can be awaited
 ## to continue once the transition is over.
+## [br][br]
+## Defaults live under [code]Project > Project Settings > Scene Manager[/code], and
+## [method set_animation_player] swaps the built-in shader fade for animations of your own.
 ##
 ## @tutorial(Full documentation): https://github.com/glass-brick/Scene-Manager/wiki
 
@@ -44,21 +47,29 @@ signal background_load_finished(path: String)
 signal background_load_failed(path: String)
 
 const SceneTreeAdapter = preload("res://addons/scene_manager/SceneTreeAdapter.gd")
+const SceneManagerSettings = preload("res://addons/scene_manager/SceneManagerSettings.gd")
 ## The loading screen used when [code]loading_screen[/code] is [code]true[/code]: a progress
 ## bar centred on a transparent background.
 const DEFAULT_LOADING_SCREEN = preload("res://addons/scene_manager/DefaultLoadingScreen.tscn")
+## The animation every transition plays by default, on the built-in player and on a custom one
+## alike. A player set through [method set_animation_player] takes over the whole transition
+## simply by defining an animation with this name.
+const DEFAULT_ANIMATION_NAME := "Fade"
 
 ## [code]true[/code] while a transition is running. Check it before starting another one, so
 ## a button mashed twice cannot fire two overlapping transitions.
 var is_transitioning := false
 var _adapter
 var _current_scene: Node
+var _user_animation_player: AnimationPlayer
 @onready var _animation_player: AnimationPlayer = $AnimationPlayer
 @onready var _shader_blend_rect: ColorRect = $CanvasLayer/ColorRect
 @onready var _loading_screen_layer: CanvasLayer = $LoadingScreenLayer
 
 ## Options used by every call, each one overridden by the dictionary passed to a method.
-## Assign to this to change the defaults for the whole project.
+## Most of these are configurable under [code]Project > Project Settings > Scene Manager[/code],
+## which is read once on startup; assign to this dictionary to change a default at runtime, or
+## to reach the [Callable] options, which Project Settings cannot express.
 ## [br][br]
 ## [code]speed[/code]: multiplier on the one second fade animation.[br]
 ## [code]color[/code]: the [Color] the screen fades to.[br]
@@ -79,11 +90,16 @@ var _current_scene: Node
 ## [code]cache_mode[/code]: the [enum ResourceLoader.CacheMode] to load with.[br]
 ## [code]on_tree_enter[/code], [code]on_ready[/code]: [Callable]s handed the new scene, to
 ## set it up before it runs.[br]
-## [code]on_fade_out[/code], [code]on_fade_in[/code]: [Callable]s run as each fade ends.
+## [code]on_fade_out[/code], [code]on_fade_in[/code]: [Callable]s run as each fade ends.[br]
+## [code]animation_name[/code]: which animation of the player set through
+## [method set_animation_player] to play. Falls back to the built-in shader fade when no such
+## player is set, or when it has no animation by that name.
 ## [br][br]
-## [code]pattern[/code] and [code]ease[/code] each apply to both halves of the transition.
-## To differ per side, pass [code]pattern_enter[/code] / [code]pattern_leave[/code] or
-## [code]ease_enter[/code] / [code]ease_leave[/code] instead, which take priority.
+## [code]pattern[/code], [code]ease[/code] and [code]animation_name[/code] each apply to both
+## halves of the transition. To differ per side, pass [code]pattern_enter[/code] /
+## [code]pattern_leave[/code], [code]ease_enter[/code] / [code]ease_leave[/code] or
+## [code]animation_name_enter[/code] / [code]animation_name_leave[/code] instead, which take
+## priority.
 var default_options := {
 	"speed": 2,
 	"color": Color("#000000"),
@@ -92,6 +108,7 @@ var default_options := {
 	"invert_on_enter": false,
 	"invert_on_leave": true,
 	"ease": 1.0,
+	"animation_name": DEFAULT_ANIMATION_NAME,
 	"skip_scene_change": false,
 	"skip_fade_out": false,
 	"skip_fade_in": false,
@@ -113,6 +130,10 @@ var _failed_loads := { }
 
 
 func _ready() -> void:
+	SceneManagerSettings.read_into(default_options)
+	var configured_player := SceneManagerSettings.get_animation_player_path()
+	if not configured_player.is_empty():
+		set_animation_player(configured_player)
 	if not _adapter:
 		_adapter = SceneTreeAdapter.new(get_tree())
 	_current_scene = _adapter.get_current_scene()
@@ -150,6 +171,10 @@ func _get_final_options(initial_options: Dictionary) -> Dictionary:
 	for ease_key in ["ease_enter", "ease_leave"]:
 		if not ease_key in options:
 			options[ease_key] = options["ease"]
+
+	for animation_name_key in ["animation_name_enter", "animation_name_leave"]:
+		if not animation_name_key in options:
+			options[animation_name_key] = options["animation_name"]
 
 	return options
 
@@ -379,23 +404,115 @@ func _report_progress(loading_screen: Node, progress: float) -> void:
 		loading_screen.set_progress(progress)
 
 
+## Registers a custom [AnimationPlayer] so a project can transition with its own animations
+## instead of the built-in shader fade.
+## [br][br]
+## [param animation_player] is a path to a scene, or an already loaded [PackedScene], whose
+## [b]root[/b] node is an [AnimationPlayer]. Pass [code]null[/code] to go back to the built-in
+## fade. SceneManager instantiates the scene and holds on to it, so it outlives the scene swaps
+## it animates. It can also be set once under
+## [code]Project > Project Settings > Scene Manager[/code].
+## [br][br]
+## The scene must set [member AnimationPlayer.root_node] to [code]NodePath(".")[/code] so its
+## tracks resolve against itself, and should carry a [code]RESET[/code] animation that parks
+## every visual offscreen, since the player is always rendered over the game.
+## [br][br]
+## An animation named [constant DEFAULT_ANIMATION_NAME] takes over every transition on its own.
+## Any other animation is opt-in per call and per side, through the [code]animation_name[/code],
+## [code]animation_name_enter[/code] and [code]animation_name_leave[/code] options:
+## [codeblock]
+## SceneManager.set_animation_player("res://transitions/roll.tscn")
+## SceneManager.change_scene("res://levels/two.tscn", {
+##     "animation_name_enter": "roll",  # custom animation covers the screen
+##     "pattern_leave": "squares",      # built-in shader fade reveals it
+## })
+## [/codeblock]
+## Passing [code]null[/code] for a side forces the built-in fade there. Whichever of the two is
+## not animating is cleared instantly the moment the other takes over.
+## [br][br]
+## Only [code]speed[/code] applies to custom animations: [code]pattern[/code],
+## [code]color[/code], [code]invert_on_*[/code] and [code]ease[/code] shape the built-in shader
+## fade alone.
+func set_animation_player(animation_player: Variant) -> void:
+	assert(
+			animation_player == null or animation_player is String
+			or animation_player is PackedScene,
+			"set_animation_player() takes a scene path, a PackedScene, or null",
+	)
+	if is_instance_valid(_user_animation_player):
+		_user_animation_player.queue_free()
+	_user_animation_player = null
+	if animation_player == null:
+		return
+	var scene = animation_player if animation_player is PackedScene else load(animation_player)
+	assert(scene is PackedScene, "%s is not a PackedScene" % animation_player)
+	var instance = scene.instantiate()
+	assert(
+			instance is AnimationPlayer,
+			"The root of a custom animation player scene must be an AnimationPlayer",
+	)
+	_user_animation_player = instance
+	$CanvasLayer.add_child(_user_animation_player)
+	if _user_animation_player.has_animation("RESET"):
+		_user_animation_player.play("RESET")
+
+
+## Picks the player and animation a side of the transition runs on. The custom player only
+## wins when it actually has the requested animation, so a player that defines nothing but
+## [code]roll[/code] leaves untouched calls on the built-in fade.
+func _resolve_fade(animation_name) -> Dictionary:
+	var builtin := { "player": _animation_player, "animation": DEFAULT_ANIMATION_NAME }
+	if animation_name == null:
+		return builtin
+	if (
+			is_instance_valid(_user_animation_player)
+			and _user_animation_player.has_animation(animation_name)
+	):
+		return { "player": _user_animation_player, "animation": animation_name }
+	assert(
+			animation_name == DEFAULT_ANIMATION_NAME,
+			'No animation named "%s" on the custom animation player.' % animation_name,
+	)
+	return builtin
+
+
+func _setup_builtin_fade(pattern, color: Color, inverted: bool, ease_amount: float) -> void:
+	_shader_blend_rect.material.set_shader_parameter("dissolve_texture", pattern)
+	_shader_blend_rect.material.set_shader_parameter("fade", ! pattern)
+	_shader_blend_rect.material.set_shader_parameter("fade_color", color)
+	_shader_blend_rect.material.set_shader_parameter("inverted", inverted)
+	var animation = _animation_player.get_animation(DEFAULT_ANIMATION_NAME)
+	animation.track_set_key_transition(0, 0, ease_amount)
+
+
+## When the two halves of a transition run on different players, the one that covered the
+## screen is still covering it. Clear it in one cut so the other can reveal.
+func _clear_inactive_player(active: AnimationPlayer) -> void:
+	if active != _animation_player:
+		_shader_blend_rect.material.set_shader_parameter("dissolve_amount", 0.0)
+	elif is_instance_valid(_user_animation_player) and _user_animation_player.has_animation("RESET"):
+		_user_animation_player.play("RESET")
+
+
 ## Covers the screen, playing the fade forwards. Await it to continue once the screen is
 ## fully hidden. Pair it with [method fade_in] to drive a transition by hand.
 func fade_out(setted_options: Dictionary = { }) -> void:
 	var options = _get_final_options(setted_options)
+	var fade := _resolve_fade(options["animation_name_enter"])
+	var player: AnimationPlayer = fade["player"]
 	is_transitioning = true
-	_animation_player.speed_scale = options["speed"]
-
-	_shader_blend_rect.material.set_shader_parameter("dissolve_texture", options["pattern_enter"])
-	_shader_blend_rect.material.set_shader_parameter("fade", ! options["pattern_enter"])
-	_shader_blend_rect.material.set_shader_parameter("fade_color", options["color"])
-	_shader_blend_rect.material.set_shader_parameter("inverted", options["invert_on_enter"])
-	var animation = _animation_player.get_animation("ShaderFade")
-	animation.track_set_key_transition(0, 0, options["ease_enter"])
+	player.speed_scale = options["speed"]
+	if player == _animation_player:
+		_setup_builtin_fade(
+				options["pattern_enter"],
+				options["color"],
+				options["invert_on_enter"],
+				options["ease_enter"],
+		)
 	fade_started.emit()
-	_animation_player.play("ShaderFade")
+	player.play(fade["animation"])
 
-	await _animation_player.animation_finished
+	await player.animation_finished
 	fade_complete.emit()
 	options["on_fade_out"].call()
 
@@ -404,17 +521,21 @@ func fade_out(setted_options: Dictionary = { }) -> void:
 ## screen is clear.
 func fade_in(setted_options: Dictionary = { }) -> void:
 	var options = _get_final_options(setted_options)
-	_animation_player.speed_scale = options["speed"]
-	_shader_blend_rect.material.set_shader_parameter("dissolve_texture", options["pattern_leave"])
-	_shader_blend_rect.material.set_shader_parameter("fade", ! options["pattern_leave"])
-	_shader_blend_rect.material.set_shader_parameter("fade_color", options["color"])
-	_shader_blend_rect.material.set_shader_parameter("inverted", options["invert_on_leave"])
-	var animation = _animation_player.get_animation("ShaderFade")
-	animation.track_set_key_transition(0, 0, options["ease_leave"])
+	var fade := _resolve_fade(options["animation_name_leave"])
+	var player: AnimationPlayer = fade["player"]
+	player.speed_scale = options["speed"]
+	_clear_inactive_player(player)
+	if player == _animation_player:
+		_setup_builtin_fade(
+				options["pattern_leave"],
+				options["color"],
+				options["invert_on_leave"],
+				options["ease_leave"],
+		)
 	fade_started.emit()
-	_animation_player.play_backwards("ShaderFade")
+	player.play_backwards(fade["animation"])
 
-	await _animation_player.animation_finished
+	await player.animation_finished
 	is_transitioning = false
 	transition_finished.emit()
 	options["on_fade_in"].call()
