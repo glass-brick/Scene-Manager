@@ -67,9 +67,10 @@ var _user_animation_player: AnimationPlayer
 @onready var _loading_screen_layer: CanvasLayer = $LoadingScreenLayer
 
 ## Options used by every call, each one overridden by the dictionary passed to a method.
-## Most of these are configurable under [code]Project > Project Settings > Scene Manager[/code],
-## which is read once on startup; assign to this dictionary to change a default at runtime, or
-## to reach the [Callable] options, which Project Settings cannot express.
+## Built from [code]Project > Project Settings > Scene Manager[/code], which is read once as
+## SceneManager is created; assign to this dictionary to change a default at runtime, or to
+## reach the options Project Settings cannot express — the [Callable]s and the
+## [code]skip_*[/code] switches.
 ## [br][br]
 ## [code]speed[/code]: multiplier on the one second fade animation.[br]
 ## [code]color[/code]: the [Color] the screen fades to.[br]
@@ -100,27 +101,7 @@ var _user_animation_player: AnimationPlayer
 ## [code]pattern_leave[/code], [code]ease_enter[/code] / [code]ease_leave[/code] or
 ## [code]animation_name_enter[/code] / [code]animation_name_leave[/code] instead, which take
 ## priority.
-var default_options := {
-	"speed": 2.0,
-	"color": Color("#000000"),
-	"pattern": "fade",
-	"wait_time": 0.5,
-	"invert_on_enter": false,
-	"invert_on_leave": true,
-	"ease": 1.0,
-	"animation_name": DEFAULT_ANIMATION_NAME,
-	"skip_scene_change": false,
-	"skip_fade_out": false,
-	"skip_fade_in": false,
-	"background_loading": true,
-	"loading_screen": null,
-	"min_loading_time": 0.0,
-	"cache_mode": ResourceLoader.CACHE_MODE_IGNORE,
-	"on_tree_enter": func(scene): return,
-	"on_ready": func(scene): return,
-	"on_fade_out": func(): return,
-	"on_fade_in": func(): return,
-}
+var default_options := SceneManagerSettings.build_defaults()
 var _previous_scene = null
 var _is_swapping := false
 var _pending_loads := { }
@@ -129,8 +110,21 @@ var _discarded_loads := { }
 var _failed_loads := { }
 
 
+## The options [SceneManagerSettings] cannot carry: switches a single call flips, and the
+## callbacks. Merged in rather than listed there so the two halves never drift apart.
+func _init() -> void:
+	default_options.merge({
+		"skip_scene_change": false,
+		"skip_fade_out": false,
+		"skip_fade_in": false,
+		"on_tree_enter": func(scene): return,
+		"on_ready": func(scene): return,
+		"on_fade_out": func(): return,
+		"on_fade_in": func(): return,
+	})
+
+
 func _ready() -> void:
-	SceneManagerSettings.read_into(default_options)
 	var configured_player := SceneManagerSettings.get_animation_player_path()
 	if not configured_player.is_empty():
 		set_animation_player(configured_player)

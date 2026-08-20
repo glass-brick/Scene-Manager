@@ -141,18 +141,20 @@ static func register() -> void:
 	ProjectSettings.save()
 
 
-## Overwrites [param defaults] with whatever the project configured. Anything left unset falls
-## back to the value already in the dictionary, so a project where [method register] never ran
-## behaves exactly as the shipped defaults do.
-static func read_into(defaults: Dictionary) -> void:
+## Builds the configurable half of [member SceneManager.default_options] — every option this
+## table covers, read from the project and falling back to the shipped default. A project where
+## [method register] never ran therefore behaves exactly as the shipped defaults do.
+static func build_defaults() -> Dictionary:
+	var defaults := { }
 	for definition in DEFINITIONS:
 		var key: String = definition["key"]
 		if key.is_empty():
 			continue
-		var value = ProjectSettings.get_setting(definition["setting"], defaults[key])
+		var value = ProjectSettings.get_setting(definition["setting"], definition["default"])
 		if key == "loading_screen":
 			value = _to_loading_screen(value)
 		defaults[key] = value
+	return defaults
 
 
 ## Reads the configured custom animation player scene, or an empty string when there is none.

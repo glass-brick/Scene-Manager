@@ -68,21 +68,32 @@ func test_the_animation_player_setting_installs_the_player():
 	var harness = Harness.new(self, get_tree())
 	assert_true(harness.manager._user_animation_player is AnimationPlayer)
 
+# The options are half settings-derived and half code-only. A new option that lands in neither
+# list is one somebody forgot to make configurable, or forgot to decide about.
+const CODE_ONLY_OPTIONS := [
+	"skip_scene_change",
+	"skip_fade_out",
+	"skip_fade_in",
+	"on_tree_enter",
+	"on_ready",
+	"on_fade_out",
+	"on_fade_in",
+]
 
-func test_every_setting_maps_to_a_real_option():
-	var defaults := _defaults()
+
+func test_every_option_is_configurable_or_deliberately_code_only():
+	var configurable := []
 	for definition in Settings.DEFINITIONS:
-		var key: String = definition["key"]
-		if key.is_empty():
-			continue
-		assert_has(defaults, key, definition["setting"])
+		if not definition["key"].is_empty():
+			configurable.append(definition["key"])
+	for key in _defaults():
+		assert_true(
+			key in configurable or key in CODE_ONLY_OPTIONS,
+			"%s is neither a project setting nor a listed code-only option" % key,
+		)
 
 
-func test_setting_defaults_match_the_shipped_option_defaults():
+func test_the_code_only_options_survive_being_built_from_settings():
 	var defaults := _defaults()
-	for definition in Settings.DEFINITIONS:
-		var key: String = definition["key"]
-		# loading_screen is a path in the settings and a PackedScene in the options.
-		if key.is_empty() or key == "loading_screen":
-			continue
-		assert_eq(defaults[key], definition["default"], definition["setting"])
+	for key in CODE_ONLY_OPTIONS:
+		assert_has(defaults, key)
