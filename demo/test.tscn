@@ -16,9 +16,19 @@ color = Color(0.298039, 0.14902, 0.14902, 1)
 [node name="Button" type="Button" parent="CanvasLayer/ColorRect" unique_id=1126973035]
 layout_mode = 0
 anchor_left = 0.4
-anchor_top = 0.4
+anchor_top = 0.3
 anchor_right = 0.6
-anchor_bottom = 0.6
+anchor_bottom = 0.45
 theme_override_constants/outline_size = 0
 theme_override_font_sizes/font_size = 16
 text = "Change Scene"
+
+[node name="CustomButton" type="Button" parent="CanvasLayer/ColorRect" unique_id=1126973036]
+layout_mode = 0
+anchor_left = 0.4
+anchor_top = 0.55
+anchor_right = 0.6
+anchor_bottom = 0.7
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 16
+text = "Custom Animation"

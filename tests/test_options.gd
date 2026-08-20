@@ -13,7 +13,7 @@ func before_each():
 
 func test_defaults_are_applied_when_nothing_is_passed():
 	var options = _manager._get_final_options({ })
-	assert_eq(options["speed"], 2)
+	assert_eq(options["speed"], 2.0)
 	assert_eq(options["wait_time"], 0.5)
 	assert_eq(options["color"], Color("#000000"))
 
@@ -30,10 +30,12 @@ func test_pattern_expands_to_both_sides():
 
 
 func test_explicit_pattern_side_wins_over_pattern():
-	var options = _manager._get_final_options({
-				"pattern": "squares",
-				"pattern_leave": "fade",
-			})
+	var options = _manager._get_final_options(
+		{
+			"pattern": "squares",
+			"pattern_leave": "fade",
+		},
+	)
 	assert_not_null(options["pattern_enter"], "pattern_enter falls back to pattern")
 	assert_null(options["pattern_leave"], "pattern_leave was explicitly a plain fade")
 
@@ -48,6 +50,29 @@ func test_explicit_ease_side_wins_over_ease():
 	var options = _manager._get_final_options({ "ease": 2.5, "ease_leave": 0.5 })
 	assert_eq(options["ease_enter"], 2.5)
 	assert_eq(options["ease_leave"], 0.5)
+
+
+func test_animation_name_expands_to_both_sides():
+	var options = _manager._get_final_options({ "animation_name": "roll" })
+	assert_eq(options["animation_name_enter"], "roll")
+	assert_eq(options["animation_name_leave"], "roll")
+
+
+func test_explicit_animation_name_side_wins_over_animation_name():
+	var options = _manager._get_final_options(
+		{
+			"animation_name": "roll",
+			"animation_name_leave": null,
+		},
+	)
+	assert_eq(options["animation_name_enter"], "roll")
+	assert_null(options["animation_name_leave"], "an explicit null forces the built-in fade")
+
+
+func test_animation_name_defaults_to_the_builtin_fade_animation():
+	var options = _manager._get_final_options({ })
+	assert_eq(options["animation_name_enter"], "Fade")
+	assert_eq(options["animation_name_leave"], "Fade")
 
 
 func test_invert_on_leave_defaults_to_true():

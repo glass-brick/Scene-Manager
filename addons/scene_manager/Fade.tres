@@ -1,7 +1,7 @@
 [gd_resource type="Animation" format=3 uid="uid://dxr1r78uxitcq"]
 
 [resource]
-resource_name = "ShaderFade"
+resource_name = "Fade"
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true

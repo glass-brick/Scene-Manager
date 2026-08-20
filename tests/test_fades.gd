@@ -31,10 +31,12 @@ func test_plain_fade_sets_the_fade_flag_and_no_texture():
 
 func test_fade_out_applies_color_and_inversion():
 	await _manager.fade_out(
-			_harness.options({
-						"color": Color("#ff0000"),
-						"invert_on_enter": true,
-					})
+		_harness.options(
+			{
+				"color": Color("#ff0000"),
+				"invert_on_enter": true,
+			},
+		),
 	)
 	assert_eq(_harness.shader_param("fade_color"), Color("#ff0000"))
 	assert_true(_harness.shader_param("inverted"))
@@ -53,22 +55,22 @@ func test_fade_in_honours_explicit_invert_on_leave():
 
 func test_speed_option_drives_animation_speed_scale():
 	await _manager.fade_out(_harness.options({ "speed": 50 }))
-	assert_eq(_manager._animation_player.speed_scale, 50)
+	assert_eq(_manager._animation_player.speed_scale, 50.0)
 
 
 func test_ease_is_written_to_the_animation_track():
 	await _manager.fade_out(_harness.options({ "ease_enter": 2.5 }))
-	var animation = _manager._animation_player.get_animation("ShaderFade")
+	var animation = _manager._animation_player.get_animation("Fade")
 	assert_almost_eq(animation.track_get_key_transition(0, 0), 2.5, 0.001)
 
 
 func test_fade_out_covers_the_screen_and_fade_in_clears_it():
 	await _manager.fade_out(_harness.options())
 	assert_almost_eq(
-			_harness.shader_param("dissolve_amount"),
-			1.0,
-			0.001,
-			"screen should be covered",
+		_harness.shader_param("dissolve_amount"),
+		1.0,
+		0.001,
+		"screen should be covered",
 	)
 	await _manager.fade_in(_harness.options())
 	assert_almost_eq(_harness.shader_param("dissolve_amount"), 0.0, 0.001, "screen should be clear")
