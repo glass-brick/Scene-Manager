@@ -3,11 +3,13 @@ extends RefCounted
 ##
 ## The editor plugin calls [method register] to make these show up under
 ## [code]Project > Project Settings > Scene Manager[/code]; the autoload calls
-## [method read_into] on startup to fold them over its hardcoded defaults. The two never have
-## to agree on anything but this file.
+## [method build_defaults] as it is created. The two never have to agree on anything but the
+## [constant DEFINITIONS] table, which is where every default value is written down once.
 ##
-## The per-call [code]skip_*[/code] flags and the [Callable] options are deliberately absent:
-## the first are switches a single transition flips, the second cannot be expressed here.
+## The [Callable] options are the only ones absent, having nothing Project Settings could show.
+## Options that a single transition usually flips rather than a project — the
+## [code]skip_*[/code] switches and [code]cache_mode[/code] — are marked advanced, so they sit
+## behind the Advanced Settings toggle instead of cluttering the panel.
 
 const PREFIX := "scene_manager/"
 const ANIMATION_PLAYER_SETTING := PREFIX + "animation_player"

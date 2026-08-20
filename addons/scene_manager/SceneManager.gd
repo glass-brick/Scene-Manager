@@ -74,8 +74,11 @@ var _user_animation_player: AnimationPlayer
 ## [br][br]
 ## [code]speed[/code]: multiplier on the one second fade animation.[br]
 ## [code]color[/code]: the [Color] the screen fades to.[br]
-## [code]pattern[/code]: [code]"fade"[/code] for a flat alpha fade, or the name of a mask in
-## [code]shader_patterns/[/code], or an absolute path to a texture.[br]
+## [code]pattern[/code]: [code]"fade"[/code] for a flat alpha fade, one of the built-in masks
+## in [code]shader_patterns/[/code] — [code]"circle"[/code], [code]"curtains"[/code],
+## [code]"diagonal"[/code], [code]"horizontal"[/code], [code]"radial"[/code],
+## [code]"scribbles"[/code], [code]"squares"[/code], [code]"vertical"[/code] — or an absolute
+## path to a texture of your own.[br]
 ## [code]wait_time[/code]: seconds to hold the covered screen between the two fades.[br]
 ## [code]invert_on_enter[/code], [code]invert_on_leave[/code]: reverse the direction the
 ## pattern dissolves in.[br]
@@ -394,7 +397,7 @@ func _report_progress(loading_screen: Node, progress: float) -> void:
 ## it animates. It can also be set once under
 ## [code]Project > Project Settings > Scene Manager[/code].
 ## [br][br]
-## The scene must set [member AnimationPlayer.root_node] to [code]NodePath(".")[/code] so its
+## The scene must set [member AnimationMixer.root_node] to [code]NodePath(".")[/code] so its
 ## tracks resolve against itself, and should carry a [code]RESET[/code] animation that parks
 ## every visual offscreen, since the player is always rendered over the game.
 ## [br][br]
@@ -475,7 +478,16 @@ func _clear_inactive_player(active: AnimationPlayer) -> void:
 
 
 ## Covers the screen, playing the fade forwards. Await it to continue once the screen is
-## fully hidden. Pair it with [method fade_in] to drive a transition by hand.
+## fully hidden. Pair it with [method fade_in] to drive a transition by hand, or with
+## [code]skip_fade_out[/code] to get work done while the screen is covered:
+## [codeblock]
+## await SceneManager.fade_out()
+## # ... reposition the player, save the game, whatever needs hiding ...
+## SceneManager.change_scene("res://levels/two.tscn", { "skip_fade_out": true })
+## [/codeblock]
+## Reads [code]speed[/code], [code]color[/code], [code]pattern_enter[/code],
+## [code]invert_on_enter[/code], [code]ease_enter[/code] and
+## [code]animation_name_enter[/code]; the rest of the options do not apply.
 func fade_out(setted_options: Dictionary = { }) -> void:
 	var options = _get_final_options(setted_options)
 	var fade := _resolve_fade(options["animation_name_enter"])
@@ -498,7 +510,11 @@ func fade_out(setted_options: Dictionary = { }) -> void:
 
 
 ## Reveals the screen again, playing the fade backwards. Await it to continue once the
-## screen is clear.
+## screen is clear — useful on its own for an opening transition when the game starts.
+## [br][br]
+## Reads [code]speed[/code], [code]color[/code], [code]pattern_leave[/code],
+## [code]invert_on_leave[/code], [code]ease_leave[/code] and
+## [code]animation_name_leave[/code]; the rest of the options do not apply.
 func fade_in(setted_options: Dictionary = { }) -> void:
 	var options = _get_final_options(setted_options)
 	var fade := _resolve_fade(options["animation_name_leave"])

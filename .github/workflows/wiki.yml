@@ -1,0 +1,48 @@
+name: Wiki
+
+# The API reference is generated from the addon's doc comments, so the wiki cannot drift from
+# the code: every version tag regenerates and pushes it. The hand-written pages (Home,
+# Getting-started, Features) are never touched.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish API reference
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.0
+          use-dotnet: false
+          include-templates: false
+
+      - name: Import assets
+        run: godot --headless --import
+
+      - name: Generate the API reference
+        run: python3 tools/generate_docs.py --out API-Reference.md
+
+      - name: Push it to the wiki
+        run: |
+          git clone --depth 1 \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git" \
+            wiki
+          cp API-Reference.md wiki/API-Reference.md
+          cd wiki
+          if git diff --quiet; then
+            echo "The wiki already matches the doc comments."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add API-Reference.md
+          git commit -m "docs: regenerate API reference for ${{ github.ref_name }}"
+          git push
