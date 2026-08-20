@@ -55,7 +55,7 @@ func test_fade_in_honours_explicit_invert_on_leave():
 
 func test_speed_option_drives_animation_speed_scale():
 	await _manager.fade_out(_harness.options({ "speed": 50 }))
-	assert_eq(_manager._animation_player.speed_scale, 50)
+	assert_eq(_manager._animation_player.speed_scale, 50.0)
 
 
 func test_ease_is_written_to_the_animation_track():

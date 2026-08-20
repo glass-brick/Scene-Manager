@@ -101,7 +101,7 @@ var _user_animation_player: AnimationPlayer
 ## [code]animation_name_enter[/code] / [code]animation_name_leave[/code] instead, which take
 ## priority.
 var default_options := {
-	"speed": 2,
+	"speed": 2.0,
 	"color": Color("#000000"),
 	"pattern": "fade",
 	"wait_time": 0.5,
