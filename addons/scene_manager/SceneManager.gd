@@ -66,44 +66,7 @@ var _user_animation_player: AnimationPlayer
 @onready var _shader_blend_rect: ColorRect = $CanvasLayer/ColorRect
 @onready var _loading_screen_layer: CanvasLayer = $LoadingScreenLayer
 
-## Options used by every call, each one overridden by the dictionary passed to a method.
-## Built from [code]Project > Project Settings > Scene Manager[/code], which is read once as
-## SceneManager is created; assign to this dictionary to change a default at runtime, or to
-## reach the options Project Settings cannot express — the [Callable]s and the
-## [code]skip_*[/code] switches.
-## [br][br]
-## [code]speed[/code]: multiplier on the one second fade animation.[br]
-## [code]color[/code]: the [Color] the screen fades to.[br]
-## [code]pattern[/code]: [code]"fade"[/code] for a flat alpha fade, one of the built-in masks
-## in [code]shader_patterns/[/code] — [code]"circle"[/code], [code]"curtains"[/code],
-## [code]"diagonal"[/code], [code]"horizontal"[/code], [code]"radial"[/code],
-## [code]"scribbles"[/code], [code]"squares"[/code], [code]"vertical"[/code] — or an absolute
-## path to a texture of your own.[br]
-## [code]wait_time[/code]: seconds to hold the covered screen between the two fades.[br]
-## [code]invert_on_enter[/code], [code]invert_on_leave[/code]: reverse the direction the
-## pattern dissolves in.[br]
-## [code]ease[/code]: curve of the fade; 1.0 is linear, lower eases out, higher eases in.[br]
-## [code]skip_scene_change[/code], [code]skip_fade_out[/code], [code]skip_fade_in[/code]:
-## leave that part of the transition out.[br]
-## [code]background_loading[/code]: load the scene on a worker thread, overlapping the
-## fade out instead of blocking it.[br]
-## [code]loading_screen[/code]: a [PackedScene] to show while loading, or [code]true[/code]
-## for [constant DEFAULT_LOADING_SCREEN]. Implies [code]background_loading[/code].[br]
-## [code]min_loading_time[/code]: seconds to keep the loading screen up, so a fast load does
-## not make it flash past. Implies [code]background_loading[/code].[br]
-## [code]cache_mode[/code]: the [enum ResourceLoader.CacheMode] to load with.[br]
-## [code]on_tree_enter[/code], [code]on_ready[/code]: [Callable]s handed the new scene, to
-## set it up before it runs.[br]
-## [code]on_fade_out[/code], [code]on_fade_in[/code]: [Callable]s run as each fade ends.[br]
-## [code]animation_name[/code]: which animation of the player set through
-## [method set_animation_player] to play. Falls back to the built-in shader fade when no such
-## player is set, or when it has no animation by that name.
-## [br][br]
-## [code]pattern[/code], [code]ease[/code] and [code]animation_name[/code] each apply to both
-## halves of the transition. To differ per side, pass [code]pattern_enter[/code] /
-## [code]pattern_leave[/code], [code]ease_enter[/code] / [code]ease_leave[/code] or
-## [code]animation_name_enter[/code] / [code]animation_name_leave[/code] instead, which take
-## priority.
+## Options used by every call, check full docs [here](https://github.com/glass-brick/Scene-Manager/wiki/Transition-Options)
 var default_options := SceneManagerSettings.build_defaults()
 var _previous_scene = null
 var _is_swapping := false
@@ -121,6 +84,113 @@ func _ready() -> void:
 		_adapter = SceneTreeAdapter.new(get_tree())
 	_current_scene = _adapter.get_current_scene()
 	scene_loaded.emit()
+
+
+## Swaps in a new scene, fading out before the swap and back in after it. Await it to
+## continue once the whole transition is over.
+## [br][br]
+## [param path] takes a [String] path, an already loaded [PackedScene], or [code]null[/code]
+## to reload the current scene. [param setted_options] is merged over
+## [member default_options].
+## [br][br]
+## If the load fails the swap is abandoned and the screen fades back in, leaving the current
+## scene running.
+func change_scene(path: Variant, setted_options: Dictionary = { }) -> void:
+	assert(
+		path == null or path is String or path is PackedScene,
+		'Path must be a string or a PackedScene',
+	)
+	var options = _get_final_options(setted_options)
+	# Kick the load before the fade so the two overlap.
+	if path is String and _should_load_in_background(options):
+		preload_scene(path, options["cache_mode"])
+	if not options["skip_fade_out"]:
+		await fade_out(setted_options)
+	if not options["skip_scene_change"]:
+		if path == null:
+			await _reload_scene()
+		else:
+			var following_scene = await _resolve_scene(path, options)
+			if following_scene == null:
+				if not options["skip_fade_out"]:
+					await fade_in(setted_options)
+				return
+			await _replace_scene(following_scene, options)
+	await _adapter.create_timer(options["wait_time"]).timeout
+	if not options["skip_fade_in"]:
+		await fade_in(setted_options)
+
+
+## Reloads the current scene from disk, with the same transition [method change_scene] uses.
+func reload_scene(setted_options: Dictionary = { }) -> void:
+	await change_scene(null, setted_options)
+
+
+## Covers the screen, playing the fade forwards. Await it to continue once the screen is
+## fully hidden. Pair it with [method fade_in] to drive a transition by hand, or with
+## [code]skip_fade_out[/code] to get work done while the screen is covered:
+## [codeblock]
+## await SceneManager.fade_out()
+## # ... reposition the player, save the game, whatever needs hiding ...
+## SceneManager.change_scene("res://levels/two.tscn", { "skip_fade_out": true })
+## [/codeblock]
+## Reads [code]speed[/code], [code]color[/code], [code]pattern_enter[/code],
+## [code]invert_on_enter[/code], [code]ease_enter[/code] and
+## [code]animation_name_enter[/code]; the rest of the options do not apply.
+func fade_out(setted_options: Dictionary = { }) -> void:
+	var options = _get_final_options(setted_options)
+	var fade := _resolve_fade(options["animation_name_enter"])
+	var player: AnimationPlayer = fade["player"]
+	is_transitioning = true
+	player.speed_scale = options["speed"]
+	if player == _animation_player:
+		_setup_builtin_fade(
+			options["pattern_enter"],
+			options["color"],
+			options["invert_on_enter"],
+			options["ease_enter"],
+		)
+	fade_started.emit()
+	player.play(fade["animation"])
+
+	await player.animation_finished
+	fade_complete.emit()
+	options["on_fade_out"].call()
+
+
+## Reveals the screen again, playing the fade backwards. Await it to continue once the
+## screen is clear — useful on its own for an opening transition when the game starts.
+## [br][br]
+## Reads [code]speed[/code], [code]color[/code], [code]pattern_leave[/code],
+## [code]invert_on_leave[/code], [code]ease_leave[/code] and
+## [code]animation_name_leave[/code]; the rest of the options do not apply.
+func fade_in(setted_options: Dictionary = { }) -> void:
+	var options = _get_final_options(setted_options)
+	var fade := _resolve_fade(options["animation_name_leave"])
+	var player: AnimationPlayer = fade["player"]
+	player.speed_scale = options["speed"]
+	_clear_inactive_player(player)
+	if player == _animation_player:
+		_setup_builtin_fade(
+			options["pattern_leave"],
+			options["color"],
+			options["invert_on_leave"],
+			options["ease_leave"],
+		)
+	fade_started.emit()
+	player.play_backwards(fade["animation"])
+
+	await player.animation_finished
+	is_transitioning = false
+	transition_finished.emit()
+	options["on_fade_in"].call()
+
+
+## Fades out and back in without changing scene, useful for covering work done in an
+## [code]on_fade_out[/code] callable such as repositioning the player.
+func fade_in_place(setted_options: Dictionary = { }) -> void:
+	setted_options["skip_scene_change"] = true
+	await change_scene(null, setted_options)
 
 
 func _load_pattern(pattern) -> Texture:
@@ -253,59 +323,12 @@ func _process(_delta: float) -> void:
 		_previous_scene = tree_scene
 
 
-## Swaps in a new scene, fading out before the swap and back in after it. Await it to
-## continue once the whole transition is over.
-## [br][br]
-## [param path] takes a [String] path, an already loaded [PackedScene], or [code]null[/code]
-## to reload the current scene. [param setted_options] is merged over
-## [member default_options].
-## [br][br]
-## If the load fails the swap is abandoned and the screen fades back in, leaving the current
-## scene running.
-func change_scene(path: Variant, setted_options: Dictionary = { }) -> void:
-	assert(
-		path == null or path is String or path is PackedScene,
-		'Path must be a string or a PackedScene',
-	)
-	var options = _get_final_options(setted_options)
-	# Kick the load before the fade so the two overlap.
-	if path is String and _should_load_in_background(options):
-		preload_scene(path, options["cache_mode"])
-	if not options["skip_fade_out"]:
-		await fade_out(setted_options)
-	if not options["skip_scene_change"]:
-		if path == null:
-			await _reload_scene()
-		else:
-			var following_scene = await _resolve_scene(path, options)
-			if following_scene == null:
-				if not options["skip_fade_out"]:
-					await fade_in(setted_options)
-				return
-			await _replace_scene(following_scene, options)
-	await _adapter.create_timer(options["wait_time"]).timeout
-	if not options["skip_fade_in"]:
-		await fade_in(setted_options)
-
-
-## Reloads the current scene from disk, with the same transition [method change_scene] uses.
-func reload_scene(setted_options: Dictionary = { }) -> void:
-	await change_scene(null, setted_options)
-
-
 func _reload_scene() -> void:
 	_is_swapping = true
 	_adapter.reload_current_scene()
 	await _adapter.create_timer(0.0).timeout
 	_current_scene = _adapter.get_current_scene()
 	_is_swapping = false
-
-
-## Fades out and back in without changing scene, useful for covering work done in an
-## [code]on_fade_out[/code] callable such as repositioning the player.
-func fade_in_place(setted_options: Dictionary = { }) -> void:
-	setted_options["skip_scene_change"] = true
-	await change_scene(null, setted_options)
 
 
 func _replace_scene(following_scene: PackedScene, options: Dictionary) -> void:
@@ -475,63 +498,3 @@ func _clear_inactive_player(active: AnimationPlayer) -> void:
 		_shader_blend_rect.material.set_shader_parameter("dissolve_amount", 0.0)
 	elif is_instance_valid(_user_animation_player) and _user_animation_player.has_animation("RESET"):
 		_user_animation_player.play("RESET")
-
-
-## Covers the screen, playing the fade forwards. Await it to continue once the screen is
-## fully hidden. Pair it with [method fade_in] to drive a transition by hand, or with
-## [code]skip_fade_out[/code] to get work done while the screen is covered:
-## [codeblock]
-## await SceneManager.fade_out()
-## # ... reposition the player, save the game, whatever needs hiding ...
-## SceneManager.change_scene("res://levels/two.tscn", { "skip_fade_out": true })
-## [/codeblock]
-## Reads [code]speed[/code], [code]color[/code], [code]pattern_enter[/code],
-## [code]invert_on_enter[/code], [code]ease_enter[/code] and
-## [code]animation_name_enter[/code]; the rest of the options do not apply.
-func fade_out(setted_options: Dictionary = { }) -> void:
-	var options = _get_final_options(setted_options)
-	var fade := _resolve_fade(options["animation_name_enter"])
-	var player: AnimationPlayer = fade["player"]
-	is_transitioning = true
-	player.speed_scale = options["speed"]
-	if player == _animation_player:
-		_setup_builtin_fade(
-			options["pattern_enter"],
-			options["color"],
-			options["invert_on_enter"],
-			options["ease_enter"],
-		)
-	fade_started.emit()
-	player.play(fade["animation"])
-
-	await player.animation_finished
-	fade_complete.emit()
-	options["on_fade_out"].call()
-
-
-## Reveals the screen again, playing the fade backwards. Await it to continue once the
-## screen is clear — useful on its own for an opening transition when the game starts.
-## [br][br]
-## Reads [code]speed[/code], [code]color[/code], [code]pattern_leave[/code],
-## [code]invert_on_leave[/code], [code]ease_leave[/code] and
-## [code]animation_name_leave[/code]; the rest of the options do not apply.
-func fade_in(setted_options: Dictionary = { }) -> void:
-	var options = _get_final_options(setted_options)
-	var fade := _resolve_fade(options["animation_name_leave"])
-	var player: AnimationPlayer = fade["player"]
-	player.speed_scale = options["speed"]
-	_clear_inactive_player(player)
-	if player == _animation_player:
-		_setup_builtin_fade(
-			options["pattern_leave"],
-			options["color"],
-			options["invert_on_leave"],
-			options["ease_leave"],
-		)
-	fade_started.emit()
-	player.play_backwards(fade["animation"])
-
-	await player.animation_finished
-	is_transitioning = false
-	transition_finished.emit()
-	options["on_fade_in"].call()
