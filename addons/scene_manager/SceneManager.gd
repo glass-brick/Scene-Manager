@@ -110,20 +110,6 @@ var _discarded_loads := { }
 var _failed_loads := { }
 
 
-## The options [SceneManagerSettings] cannot carry: switches a single call flips, and the
-## callbacks. Merged in rather than listed there so the two halves never drift apart.
-func _init() -> void:
-	default_options.merge({
-		"skip_scene_change": false,
-		"skip_fade_out": false,
-		"skip_fade_in": false,
-		"on_tree_enter": func(scene): return,
-		"on_ready": func(scene): return,
-		"on_fade_out": func(): return,
-		"on_fade_in": func(): return,
-	})
-
-
 func _ready() -> void:
 	var configured_player := SceneManagerSettings.get_animation_player_path()
 	if not configured_player.is_empty():
@@ -136,8 +122,8 @@ func _ready() -> void:
 
 func _load_pattern(pattern) -> Texture:
 	assert(
-			pattern is Texture or pattern is String,
-			"Pattern is not a valid Texture, absolute path, or built-in texture.",
+		pattern is Texture or pattern is String,
+		"Pattern is not a valid Texture, absolute path, or built-in texture.",
 	)
 	if pattern is String:
 		if pattern.is_absolute_path():
@@ -275,8 +261,8 @@ func _process(_delta: float) -> void:
 ## scene running.
 func change_scene(path: Variant, setted_options: Dictionary = { }) -> void:
 	assert(
-			path == null or path is String or path is PackedScene,
-			'Path must be a string or a PackedScene',
+		path == null or path is String or path is PackedScene,
+		'Path must be a string or a PackedScene',
 	)
 	var options = _get_final_options(setted_options)
 	# Kick the load before the fade so the two overlap.
@@ -353,9 +339,10 @@ func _resolve_scene(path: Variant, options: Dictionary) -> PackedScene:
 	# loads instantly still fills over min_loading_time instead of snapping to full.
 	while true:
 		var elapsed := (Time.get_ticks_msec() - started) / 1000.0
-		var time_progress := 1.0 if min_loading_time <= 0.0 else minf(
-				elapsed / min_loading_time,
-				1.0,
+		var time_progress := (
+			1.0
+			if min_loading_time <= 0.0
+			else minf(elapsed / min_loading_time, 1.0)
 		)
 		_report_progress(loading_screen, minf(get_load_progress(path), time_progress))
 		if not _pending_loads.has(path) and elapsed >= min_loading_time:
@@ -429,9 +416,8 @@ func _report_progress(loading_screen: Node, progress: float) -> void:
 ## fade alone.
 func set_animation_player(animation_player: Variant) -> void:
 	assert(
-			animation_player == null or animation_player is String
-			or animation_player is PackedScene,
-			"set_animation_player() takes a scene path, a PackedScene, or null",
+		animation_player == null or animation_player is String or animation_player is PackedScene,
+		"set_animation_player() takes a scene path, a PackedScene, or null",
 	)
 	if is_instance_valid(_user_animation_player):
 		_user_animation_player.queue_free()
@@ -442,8 +428,8 @@ func set_animation_player(animation_player: Variant) -> void:
 	assert(scene is PackedScene, "%s is not a PackedScene" % animation_player)
 	var instance = scene.instantiate()
 	assert(
-			instance is AnimationPlayer,
-			"The root of a custom animation player scene must be an AnimationPlayer",
+		instance is AnimationPlayer,
+		"The root of a custom animation player scene must be an AnimationPlayer",
 	)
 	_user_animation_player = instance
 	$CanvasLayer.add_child(_user_animation_player)
@@ -459,20 +445,20 @@ func _resolve_fade(animation_name) -> Dictionary:
 	if animation_name == null:
 		return builtin
 	if (
-			is_instance_valid(_user_animation_player)
-			and _user_animation_player.has_animation(animation_name)
+		is_instance_valid(_user_animation_player)
+		and _user_animation_player.has_animation(animation_name)
 	):
 		return { "player": _user_animation_player, "animation": animation_name }
 	assert(
-			animation_name == DEFAULT_ANIMATION_NAME,
-			'No animation named "%s" on the custom animation player.' % animation_name,
+		animation_name == DEFAULT_ANIMATION_NAME,
+		'No animation named "%s" on the custom animation player.' % animation_name,
 	)
 	return builtin
 
 
 func _setup_builtin_fade(pattern, color: Color, inverted: bool, ease_amount: float) -> void:
 	_shader_blend_rect.material.set_shader_parameter("dissolve_texture", pattern)
-	_shader_blend_rect.material.set_shader_parameter("fade", ! pattern)
+	_shader_blend_rect.material.set_shader_parameter("fade", !pattern)
 	_shader_blend_rect.material.set_shader_parameter("fade_color", color)
 	_shader_blend_rect.material.set_shader_parameter("inverted", inverted)
 	var animation = _animation_player.get_animation(DEFAULT_ANIMATION_NAME)
@@ -498,10 +484,10 @@ func fade_out(setted_options: Dictionary = { }) -> void:
 	player.speed_scale = options["speed"]
 	if player == _animation_player:
 		_setup_builtin_fade(
-				options["pattern_enter"],
-				options["color"],
-				options["invert_on_enter"],
-				options["ease_enter"],
+			options["pattern_enter"],
+			options["color"],
+			options["invert_on_enter"],
+			options["ease_enter"],
 		)
 	fade_started.emit()
 	player.play(fade["animation"])
@@ -521,10 +507,10 @@ func fade_in(setted_options: Dictionary = { }) -> void:
 	_clear_inactive_player(player)
 	if player == _animation_player:
 		_setup_builtin_fade(
-				options["pattern_leave"],
-				options["color"],
-				options["invert_on_leave"],
-				options["ease_leave"],
+			options["pattern_leave"],
+			options["color"],
+			options["invert_on_leave"],
+			options["ease_leave"],
 		)
 	fade_started.emit()
 	player.play_backwards(fade["animation"])

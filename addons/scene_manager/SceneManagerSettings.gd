@@ -104,20 +104,48 @@ const DEFINITIONS := [
 		"default": 0.0,
 	},
 	{
-		"key": "cache_mode",
-		"setting": PREFIX + "defaults/cache_mode",
-		"type": TYPE_INT,
-		"hint": PROPERTY_HINT_ENUM,
-		"hint_string": "Ignore:0,Reuse:1,Replace:2,Ignore Deep:3,Replace Deep:4",
-		"default": ResourceLoader.CACHE_MODE_IGNORE,
-	},
-	{
 		"key": "",
 		"setting": ANIMATION_PLAYER_SETTING,
 		"type": TYPE_STRING,
 		"hint": PROPERTY_HINT_FILE,
 		"hint_string": "*.tscn",
 		"default": "",
+	},
+	{
+		"key": "cache_mode",
+		"setting": PREFIX + "defaults/cache_mode",
+		"type": TYPE_INT,
+		"hint": PROPERTY_HINT_ENUM,
+		"hint_string": "Ignore:0,Reuse:1,Replace:2,Ignore Deep:3,Replace Deep:4",
+		"default": ResourceLoader.CACHE_MODE_IGNORE,
+		"advanced": true,
+	},
+	{
+		"key": "skip_scene_change",
+		"setting": PREFIX + "defaults/skip_scene_change",
+		"type": TYPE_BOOL,
+		"hint": PROPERTY_HINT_NONE,
+		"hint_string": "",
+		"default": false,
+		"advanced": true,
+	},
+	{
+		"key": "skip_fade_out",
+		"setting": PREFIX + "defaults/skip_fade_out",
+		"type": TYPE_BOOL,
+		"hint": PROPERTY_HINT_NONE,
+		"hint_string": "",
+		"default": false,
+		"advanced": true,
+	},
+	{
+		"key": "skip_fade_in",
+		"setting": PREFIX + "defaults/skip_fade_in",
+		"type": TYPE_BOOL,
+		"hint": PROPERTY_HINT_NONE,
+		"hint_string": "",
+		"default": false,
+		"advanced": true,
 	},
 ]
 
@@ -131,13 +159,15 @@ static func register() -> void:
 		if not ProjectSettings.has_setting(setting):
 			ProjectSettings.set_setting(setting, definition["default"])
 		ProjectSettings.set_initial_value(setting, definition["default"])
-		ProjectSettings.set_as_basic(setting, true)
-		ProjectSettings.add_property_info({
-			"name": setting,
-			"type": definition["type"],
-			"hint": definition["hint"],
-			"hint_string": definition["hint_string"],
-		})
+		ProjectSettings.set_as_basic(setting, !definition.get("advanced", false))
+		ProjectSettings.add_property_info(
+			{
+				"name": setting,
+				"type": definition["type"],
+				"hint": definition["hint"],
+				"hint_string": definition["hint_string"],
+			}
+		)
 	ProjectSettings.save()
 
 
@@ -154,6 +184,18 @@ static func build_defaults() -> Dictionary:
 		if key == "loading_screen":
 			value = _to_loading_screen(value)
 		defaults[key] = value
+	defaults.merge(
+		{
+			"on_tree_enter": func(scene):
+				return,
+			"on_ready": func(scene):
+				return,
+			"on_fade_out": func():
+				return,
+			"on_fade_in": func():
+				return,
+		}
+	)
 	return defaults
 
 

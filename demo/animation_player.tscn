@@ -34,21 +34,18 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_default"]
 _data = {
-"RESET": SubResource("Animation_reset"),
-"roll": SubResource("Animation_roll")
+&"RESET": SubResource("Animation_reset"),
+&"roll": SubResource("Animation_roll")
 }
 
-[node name="AnimationPlayer" type="AnimationPlayer"]
+[node name="AnimationPlayer" type="AnimationPlayer" unique_id=592062269]
 root_node = NodePath(".")
-libraries = {
-"": SubResource("AnimationLibrary_default")
-}
+libraries/ = SubResource("AnimationLibrary_default")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1842186430]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-pivot_offset = Vector2(0, 0)
 rotation = -1.5708
 mouse_filter = 2
 color = Color(0.1, 0.05, 0.15, 1)
